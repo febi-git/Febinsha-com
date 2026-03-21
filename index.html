@@ -736,7 +736,8 @@
         /* ── World objects ── */
         let obstacles = [];
         let skidMarks = [];
-        const MAX_SKIDS = 600;
+        const MAX_SKIDS = 1200;
+        let tireTrailCounter = 0;
 
         const contactNode = { x: 700, y: -400, radius: 60, pulse: 0 };
 
@@ -922,6 +923,24 @@
                     if (skidMarks.length > MAX_SKIDS) skidMarks.splice(0, 2);
                     car.score += slip * 0.5;
                 }
+
+                /* Tire trails during normal driving (not drifting) */
+                if (slip <= 0.3 && speed > 1.5) {
+                    tireTrailCounter++;
+                    if (tireTrailCounter % 3 === 0) {
+                        const rd = CAR_SPR_H * 0.4;
+                        const wo = CAR_SPR_W * 0.38;
+                        const rx = car.x - fwdX * rd;
+                        const ry = car.y - fwdY * rd;
+                        const px = Math.cos(car.angle - Math.PI / 2);
+                        const py = Math.sin(car.angle - Math.PI / 2);
+                        skidMarks.push(
+                            { x: rx + px * wo, y: ry + py * wo, life: 0.45, trail: true },
+                            { x: rx - px * wo, y: ry - py * wo, life: 0.45, trail: true }
+                        );
+                        if (skidMarks.length > MAX_SKIDS) skidMarks.splice(0, 2);
+                    }
+                }
             }
 
             /* Friction */
@@ -1075,11 +1094,16 @@
                 }
             }
 
-            /* Skid marks */
+            /* Skid marks & tire trails */
             skidMarks.forEach(s => {
                 ctx.beginPath();
-                ctx.arc(s.x, s.y, 2, 0, Math.PI * 2);
-                ctx.fillStyle = 'rgba(18,18,18,' + (s.life * 0.8) + ')';
+                if (s.trail) {
+                    ctx.arc(s.x, s.y, 1.5, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(18,18,18,' + (s.life * 0.35) + ')';
+                } else {
+                    ctx.arc(s.x, s.y, 2, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(18,18,18,' + (s.life * 0.8) + ')';
+                }
                 ctx.fill();
             });
 
