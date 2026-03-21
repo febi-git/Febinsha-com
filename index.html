@@ -233,6 +233,133 @@
             .ui-layer { padding: 1.5rem; }
             .logo { height: 120px; }
         }
+
+        /* ── Portrait Lock Overlay ── */
+        .portrait-lock {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 40;
+            background-color: var(--bg);
+            display: none;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            text-align: center;
+            padding: 3rem 2rem;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .portrait-lock.visible {
+            opacity: 1;
+        }
+
+        .portrait-lock-top {
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .portrait-lock-mid {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.8rem;
+        }
+
+        .portrait-lock-bottom {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .portrait-lock-logo {
+            height: 200px;
+            width: auto;
+            opacity: 0.8;
+        }
+
+        .portrait-lock-heading {
+            font-family: var(--font-main);
+            font-weight: 300;
+            font-size: 1.4rem;
+            letter-spacing: 0.12em;
+            color: var(--text);
+            opacity: 0.85;
+        }
+
+        .portrait-lock h2 {
+            font-family: var(--font-main);
+            font-weight: 300;
+            font-size: 1.1rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--text);
+            opacity: 0.7;
+        }
+
+        .portrait-lock p {
+            font-family: var(--font-main);
+            font-weight: 300;
+            font-size: 0.75rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--text);
+            opacity: 0.35;
+        }
+
+        /* Phone tilt icon */
+        .tilt-icon {
+            width: 32px;
+            height: 52px;
+            position: relative;
+            animation: tiltPhone 2.4s ease-in-out infinite;
+        }
+
+        .tilt-icon-body {
+            width: 100%;
+            height: 100%;
+            border: 2px solid var(--text);
+            border-radius: 4px;
+            opacity: 0.4;
+            position: relative;
+        }
+
+        .tilt-icon-body::after {
+            content: '';
+            position: absolute;
+            bottom: 4px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 10px;
+            height: 1.5px;
+            background: var(--text);
+            border-radius: 1px;
+            opacity: 0.5;
+        }
+
+        .tilt-icon-screen {
+            position: absolute;
+            top: 6px; left: 4px;
+            right: 4px; bottom: 10px;
+            border: 1px solid var(--text);
+            border-radius: 1px;
+            opacity: 0.15;
+        }
+
+        @keyframes tiltPhone {
+            0%, 100% { transform: rotate(0deg); }
+            40% { transform: rotate(90deg); }
+            60% { transform: rotate(90deg); }
+        }
+
+        /* Show only on mobile portrait */
+        @media (max-width: 900px) and (orientation: portrait) {
+            .portrait-lock {
+                display: flex;
+            }
+        }
     </style>
 </head>
 <body>
@@ -286,6 +413,25 @@
         </div>
     </div>
 
+    <!-- Portrait lock overlay (mobile only) -->
+    <div class="portrait-lock" id="portraitLock">
+        <div class="portrait-lock-top">
+            <img src="Brand-Assets/logo.png" class="portrait-lock-logo" alt="Feb.">
+        </div>
+        <div class="portrait-lock-mid">
+            <div class="tilt-icon">
+                <div class="tilt-icon-body">
+                    <div class="tilt-icon-screen"></div>
+                </div>
+            </div>
+            <p>Tilt your phone to drift</p>
+        </div>
+        <div class="portrait-lock-bottom">
+            <div class="portrait-lock-heading">febinsha.com</div>
+            <h2>Site Under Construction</h2>
+        </div>
+    </div>
+
     <script>
         /* ── DOM refs ── */
         const canvas = document.getElementById('gameCanvas');
@@ -293,6 +439,32 @@
         const speedDisplay = document.getElementById('speedDisplay');
         const contactOverlay = document.getElementById('contactOverlay');
         const closeContactBtn = document.getElementById('closeContact');
+        const portraitLock = document.getElementById('portraitLock');
+
+        /* ── Portrait lock (mobile) ── */
+        let isPortraitLocked = false;
+
+        function checkOrientation() {
+            const isMobile = window.innerWidth <= 900;
+            const isPortrait = window.innerHeight > window.innerWidth;
+
+            if (isMobile && isPortrait) {
+                if (!isPortraitLocked) {
+                    isPortraitLocked = true;
+                    portraitLock.style.display = 'flex';
+                    requestAnimationFrame(() => portraitLock.classList.add('visible'));
+                }
+            } else {
+                if (isPortraitLocked) {
+                    isPortraitLocked = false;
+                    portraitLock.classList.remove('visible');
+                    setTimeout(() => { portraitLock.style.display = 'none'; }, 400);
+                }
+            }
+        }
+
+        window.addEventListener('resize', checkOrientation);
+        window.addEventListener('orientationchange', () => setTimeout(checkOrientation, 100));
 
         /* ── Palette (brand-aligned) ── */
         const PALETTE = {
@@ -809,8 +981,10 @@
 
         /* ── Loop ── */
         function loop() {
-            updatePhysics();
-            draw();
+            if (!isPortraitLocked) {
+                updatePhysics();
+                draw();
+            }
             requestAnimationFrame(loop);
         }
 
@@ -846,6 +1020,7 @@
         camera.y = car.y - height / 2;
         for (let i = 0; i < 4; i++) spawnObstacle();
 
+        checkOrientation();
         document.fonts.ready.then(() => { loop(); });
     </script>
 
