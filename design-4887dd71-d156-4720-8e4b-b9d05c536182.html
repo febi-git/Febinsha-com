@@ -1,0 +1,669 @@
+<html lang="en" vid="0"><head vid="1">
+    <meta charset="UTF-8" vid="2">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" vid="3">
+    <title vid="4">Febinsha | Under Construction</title>
+    
+    
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" vid="5">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" vid="6">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100;300;400&amp;display=swap" rel="stylesheet" vid="7">
+
+    <style vid="8">
+        :root {
+            --bg: #F3F1E8;
+            --text: #121212;
+            --accent: #c9553a;
+            --line: #DCD9C6;
+            --font-main: 'Outfit', sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: var(--font-main);
+            cursor: crosshair;
+        }
+
+        
+        #gameCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            
+            mix-blend-mode: multiply; 
+        }
+
+        
+        .ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+            pointer-events: none; 
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 2.5rem;
+        }
+
+        .header-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            font-size: 0.8rem;
+            font-weight: 400;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        .logo-text {
+            font-weight: 400;
+            letter-spacing: -0.02em;
+            text-transform: none;
+            font-size: 1rem;
+        }
+
+        .controls-hint {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .controls-hint span {
+            opacity: 0.5;
+        }
+
+        .status-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            font-size: 0.75rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            border-top: 1px solid var(--line);
+            padding-top: 1rem;
+        }
+
+        .speed-indicator {
+            font-family: monospace;
+            font-size: 0.85rem;
+            width: 80px;
+        }
+
+        
+        .contact-reveal {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.95);
+            background-color: var(--accent);
+            width: 100vw;
+            height: 100vh;
+            z-index: 20;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+            color: var(--text);
+        }
+
+        .contact-reveal.active {
+            opacity: 1;
+            pointer-events: all;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .contact-close {
+            position: absolute;
+            top: 2.5rem;
+            right: 2.5rem;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .contact-close:hover {
+            opacity: 0.6;
+        }
+
+        .contact-content {
+            text-align: center;
+            width: 80%;
+            max-width: 800px;
+        }
+
+        .contact-title {
+            font-size: clamp(4rem, 10vw, 8rem);
+            font-weight: 100;
+            line-height: 1;
+            letter-spacing: -0.04em;
+            margin-bottom: 2rem;
+            position: relative;
+            display: inline-block;
+        }
+
+        .contact-badge {
+            position: absolute;
+            top: -10px;
+            right: -20px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 1px solid var(--text);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: serif; 
+            font-style: italic;
+            font-size: 1.2rem;
+            background: var(--bg);
+            transform: rotate(-10deg);
+        }
+
+        .contact-body {
+            font-size: 1.2rem;
+            font-weight: 300;
+            line-height: 1.6;
+            margin-bottom: 4rem;
+        }
+
+        .contact-links {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            border-top: 1px solid rgba(18, 18, 18, 0.2);
+            padding-top: 2rem;
+            text-align: left;
+        }
+
+        .link-group h4 {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 0.5rem;
+            opacity: 0.6;
+            font-weight: 400;
+        }
+
+        .link-group a {
+            color: var(--text);
+            text-decoration: none;
+            font-size: 1rem;
+            font-weight: 400;
+            display: block;
+            margin-bottom: 0.2rem;
+            transition: opacity 0.2s;
+        }
+
+        .link-group a:hover {
+            opacity: 0.5;
+        }
+
+        
+        .noise {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 50;
+            opacity: 0.03;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        }
+
+    </style>
+</head>
+<body vid="9">
+
+    <div class="noise" vid="10"></div>
+
+    
+    <div class="ui-layer" vid="11">
+        <div class="header-bar" vid="12">
+            <div class="logo-text" vid="13">Febinsha</div>
+            <div class="controls-hint" vid="14">
+                <span vid="15">[W A S D] or [ARROWS]</span>
+                <div vid="16">DRIVE</div>
+            </div>
+        </div>
+
+        <div class="status-footer" vid="17">
+            <div class="status-text" vid="18">Status: Under Construction</div>
+            <div class="speed-indicator" id="speedDisplay" vid="19">0 km/h</div>
+        </div>
+    </div>
+
+    
+    <canvas id="gameCanvas" vid="20"></canvas>
+
+    
+    <div class="contact-reveal" id="contactOverlay" vid="21">
+        <div class="contact-close" id="closeContact" vid="22">
+            Close ✕
+        </div>
+        <div class="contact-content" vid="23">
+            <h1 class="contact-title" vid="24">
+                Hello
+                <div class="contact-badge" vid="25">f</div>
+            </h1>
+            <p class="contact-body" vid="26">
+                The full experience is currently being assembled.<br vid="27">
+                In the meantime, feel free to reach out directly or keep drifting.
+            </p>
+            <div class="contact-links" vid="28">
+                <div class="link-group" vid="29">
+                    <h4 vid="30">Direct</h4>
+                    <a href="#" vid="31">hello@febinsha.com</a>
+                </div>
+                <div class="link-group" vid="32">
+                    <h4 vid="33">Connect</h4>
+                    <a href="#" vid="34">LinkedIn</a>
+                    <a href="#" vid="35">Twitter/X</a>
+                </div>
+                <div class="link-group" vid="36">
+                    <h4 vid="37">Quick Chat</h4>
+                    <a href="#" vid="38">WhatsApp</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script vid="39">
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d', { alpha: false });
+        const speedDisplay = document.getElementById('speedDisplay');
+        const contactOverlay = document.getElementById('contactOverlay');
+        const closeContactBtn = document.getElementById('closeContact');
+
+        
+        const colors = {
+            bg: '#F3F1E8',
+            text: '#121212',
+            accent: '#c9553a',
+            line: '#DCD9C6',
+            skid: 'rgba(18, 18, 18, 0.15)'
+        };
+
+        
+        let width, height;
+        let dpr = window.devicePixelRatio || 1;
+        
+        let camera = { x: 0, y: 0 };
+        const mapSize = 4000; 
+
+        function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width * dpr;
+            canvas.height = height * dpr;
+            ctx.scale(dpr, dpr);
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        
+        const keys = {
+            ArrowUp: false, ArrowDown: false, ArrowLeft: false, ArrowRight: false,
+            w: false, a: false, s: false, d: false
+        };
+
+        window.addEventListener('keydown', (e) => {
+            if(keys.hasOwnProperty(e.key)) keys[e.key] = true;
+            if(['w','a','s','d'].includes(e.key.toLowerCase())) keys[e.key.toLowerCase()] = true;
+        });
+
+        window.addEventListener('keyup', (e) => {
+            if(keys.hasOwnProperty(e.key)) keys[e.key] = false;
+            if(['w','a','s','d'].includes(e.key.toLowerCase())) keys[e.key.toLowerCase()] = false;
+        });
+
+        
+        
+        
+        const car = {
+            x: 0, y: 0,
+            width: 12, length: 28,
+            angle: -Math.PI / 2, 
+            velocity: { x: 0, y: 0 },
+            speed: 0,
+            acceleration: 0.35,
+            maxSpeed: 18,
+            friction: 0.96, 
+            brakeFriction: 0.90, 
+            turnSpeed: 0.06,
+            driftFactor: 0.88 
+        };
+
+        
+        const skids = [];
+        const maxSkids = 200;
+
+        
+        const contactNode = {
+            x: 500, y: -300,
+            radius: 40,
+            pulse: 0
+        };
+
+        
+        const envText = [
+            { text: "FEBINSHA", x: 0, y: -100, size: 240, weight: 100, align: "center", tracking: 10 },
+            { text: "SITE UNDER CONSTRUCTION", x: 0, y: 80, size: 40, weight: 300, align: "center", tracking: 5 },
+            { text: "01", x: -800, y: -400, size: 180, weight: 100, align: "left", tracking: 0 },
+            { text: "/ PLAYGROUND", x: -800, y: -300, size: 20, weight: 400, align: "left", tracking: 2 },
+            { text: "Find the orange node.", x: 0, y: 300, size: 14, weight: 400, align: "center", tracking: 2, color: '#c9553a' }
+        ];
+
+        
+        const envLines = [
+            { x1: -1000, y1: 200, x2: 1000, y2: 200 },
+            { x1: -1000, y1: -500, x2: 1000, y2: -500 },
+            { x1: 400, y1: -800, x2: 400, y2: 800 } 
+        ];
+
+        let isContactOpen = false;
+
+        
+        function update() {
+            if (isContactOpen) return; 
+
+            
+            const isAccelerating = keys.ArrowUp || keys.w;
+            const isBraking = keys.ArrowDown || keys.s;
+            const isTurningLeft = keys.ArrowLeft || keys.a;
+            const isTurningRight = keys.ArrowRight || keys.d;
+
+            
+            let thrust = 0;
+            if (isAccelerating) thrust = car.acceleration;
+            if (isBraking) thrust = -car.acceleration * 0.8;
+
+            
+            car.velocity.x += Math.cos(car.angle) * thrust;
+            car.velocity.y += Math.sin(car.angle) * thrust;
+
+            
+            car.speed = Math.hypot(car.velocity.x, car.velocity.y);
+
+            
+            
+            if (car.speed > 0.5) {
+                
+                const movingForward = (car.velocity.x * Math.cos(car.angle) + car.velocity.y * Math.sin(car.angle)) > 0;
+                const turnMultiplier = movingForward ? 1 : -1;
+                
+                
+                const dynamicTurnSpeed = car.turnSpeed * (1 - (car.speed / car.maxSpeed) * 0.5);
+
+                if (isTurningLeft) car.angle -= dynamicTurnSpeed * turnMultiplier;
+                if (isTurningRight) car.angle += dynamicTurnSpeed * turnMultiplier;
+            }
+
+            
+            
+            const goalVelocityX = Math.cos(car.angle) * car.speed;
+            const goalVelocityY = Math.sin(car.angle) * car.speed;
+
+            
+            
+            
+            car.velocity.x += (goalVelocityX - car.velocity.x) * car.driftFactor;
+            car.velocity.y += (goalVelocityY - car.velocity.y) * car.driftFactor;
+
+            
+            const currentFriction = isBraking ? car.brakeFriction : car.friction;
+            car.velocity.x *= currentFriction;
+            car.velocity.y *= currentFriction;
+
+            
+            if (car.speed > car.maxSpeed) {
+                const ratio = car.maxSpeed / car.speed;
+                car.velocity.x *= ratio;
+                car.velocity.y *= ratio;
+            }
+
+            
+            car.x += car.velocity.x;
+            car.y += car.velocity.y;
+
+            
+            
+            const rightX = Math.cos(car.angle + Math.PI/2);
+            const rightY = Math.sin(car.angle + Math.PI/2);
+            const lateralVelocity = Math.abs(car.velocity.x * rightX + car.velocity.y * rightY);
+
+            
+            if (lateralVelocity > 2.0 && car.speed > 2) {
+                
+                const rearDist = car.length * 0.4;
+                const widthDist = car.width * 0.5;
+                
+                
+                skids.push({
+                    x: car.x - Math.cos(car.angle)*rearDist - Math.sin(car.angle)*widthDist,
+                    y: car.y - Math.sin(car.angle)*rearDist + Math.cos(car.angle)*widthDist,
+                    life: 1.0
+                });
+                
+                skids.push({
+                    x: car.x - Math.cos(car.angle)*rearDist + Math.sin(car.angle)*widthDist,
+                    y: car.y - Math.sin(car.angle)*rearDist - Math.cos(car.angle)*widthDist,
+                    life: 1.0
+                });
+
+                if (skids.length > maxSkids) {
+                    skids.splice(0, 2); 
+                }
+            }
+
+            
+            for (let i = skids.length - 1; i >= 0; i--) {
+                skids[i].life -= 0.005;
+                if (skids[i].life <= 0) skids.splice(i, 1);
+            }
+
+            
+            const displaySpeed = Math.round(car.speed * 8); 
+            speedDisplay.innerText = `${displaySpeed} km/h`;
+
+            
+            camera.x += (car.x - width / 2 - camera.x) * 0.1;
+            camera.y += (car.y - height / 2 - camera.y) * 0.1;
+
+            
+            contactNode.pulse += 0.05;
+            const distToNode = Math.hypot(car.x - contactNode.x, car.y - contactNode.y);
+            
+            if (distToNode < contactNode.radius + 10 && !isContactOpen) {
+                openContact();
+            }
+        }
+
+        
+        function fillTextWithSpacing(context, text, x, y, spacing) {
+            let totalWidth = 0;
+            for (let i = 0; i < text.length; i++) {
+                totalWidth += context.measureText(text[i]).width + spacing;
+            }
+            totalWidth -= spacing; 
+
+            let startX = x;
+            if (context.textAlign === 'center') {
+                startX = x - totalWidth / 2;
+                context.textAlign = 'left'; 
+            } else if (context.textAlign === 'right') {
+                startX = x - totalWidth;
+                context.textAlign = 'left';
+            }
+
+            let currentX = startX;
+            for (let i = 0; i < text.length; i++) {
+                context.fillText(text[i], currentX, y);
+                currentX += context.measureText(text[i]).width + spacing;
+            }
+            context.textAlign = 'center'; 
+        }
+
+        function draw() {
+            
+            ctx.fillStyle = colors.bg;
+            ctx.fillRect(0, 0, width, height);
+
+            ctx.save();
+            
+            ctx.translate(-camera.x, -camera.y);
+
+            
+            ctx.strokeStyle = colors.line;
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            envLines.forEach(line => {
+                ctx.moveTo(line.x1, line.y1);
+                ctx.lineTo(line.x2, line.y2);
+            });
+            ctx.stroke();
+
+            
+            ctx.strokeStyle = 'rgba(220, 217, 198, 0.3)'; 
+            ctx.beginPath();
+            const gridSize = 200;
+            const viewMinX = camera.x;
+            const viewMaxX = camera.x + width;
+            const viewMinY = camera.y;
+            const viewMaxY = camera.y + height;
+            
+            
+            for(let x = Math.floor(viewMinX/gridSize)*gridSize; x <= viewMaxX; x+=gridSize) {
+                ctx.moveTo(x, viewMinY); ctx.lineTo(x, viewMaxY);
+            }
+            for(let y = Math.floor(viewMinY/gridSize)*gridSize; y <= viewMaxY; y+=gridSize) {
+                ctx.moveTo(viewMinX, y); ctx.lineTo(viewMaxX, y);
+            }
+            ctx.stroke();
+
+
+            
+            envText.forEach(t => {
+                ctx.font = `${t.weight} ${t.size}px '${colors.fontMain}', 'Outfit', sans-serif`;
+                ctx.fillStyle = t.color || colors.text;
+                ctx.textAlign = t.align;
+                ctx.textBaseline = 'middle';
+                
+                if (t.tracking > 0) {
+                    
+                    ctx.save();
+                    fillTextWithSpacing(ctx, t.text, t.x, t.y, t.tracking);
+                    ctx.restore();
+                } else {
+                    ctx.fillText(t.text, t.x, t.y);
+                }
+            });
+
+            
+            const pulseRadius = contactNode.radius + Math.sin(contactNode.pulse) * 5;
+            
+            ctx.beginPath();
+            ctx.arc(contactNode.x, contactNode.y, pulseRadius, 0, Math.PI * 2);
+            ctx.fillStyle = '#c9553a';
+            ctx.fill();
+
+            
+            ctx.fillStyle = colors.text;
+            ctx.font = "italic 30px serif";
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText("f", contactNode.x, contactNode.y);
+
+
+            
+            skids.forEach(skid => {
+                ctx.beginPath();
+                ctx.arc(skid.x, skid.y, 2, 0, Math.PI*2);
+                ctx.fillStyle = `rgba(18, 18, 18, ${skid.life * 0.15})`;
+                ctx.fill();
+            });
+
+            
+            ctx.save();
+            ctx.translate(car.x, car.y);
+            ctx.rotate(car.angle);
+
+            
+            ctx.fillStyle = colors.text;
+            
+            
+            ctx.beginPath();
+            ctx.moveTo(car.length / 2, 0); 
+            ctx.lineTo(-car.length / 2, -car.width / 2); 
+            ctx.lineTo(-car.length / 2, car.width / 2); 
+            ctx.closePath();
+            ctx.fill();
+
+            
+            ctx.strokeStyle = colors.bg;
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(0, -car.width/4);
+            ctx.lineTo(0, car.width/4);
+            ctx.stroke();
+
+            ctx.restore(); 
+
+            ctx.restore(); 
+        }
+
+        function loop() {
+            update();
+            draw();
+            requestAnimationFrame(loop);
+        }
+
+        
+        function openContact() {
+            isContactOpen = true;
+            contactOverlay.classList.add('active');
+            
+            car.velocity.x = 0;
+            car.velocity.y = 0;
+            car.speed = 0;
+            
+            car.y += 60; 
+        }
+
+        function closeContact() {
+            isContactOpen = false;
+            contactOverlay.classList.remove('active');
+        }
+
+        closeContactBtn.addEventListener('click', closeContact);
+
+        
+        
+        document.fonts.ready.then(() => {
+            loop();
+        });
+
+    </script>
+
+</body></html>

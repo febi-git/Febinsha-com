@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Febinsha | Under Construction</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100;300;400&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg: #F3F1E8;
+            --text: #121212;
+            --accent: #e06030;
+            --line: #DCD9C6;
+            --font-main: 'Outfit', sans-serif;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
+
+        body, html {
+            width: 100%; height: 100%;
+            overflow: hidden;
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: var(--font-main);
+            cursor: crosshair;
+        }
+
+        #gameCanvas {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 1;
+        }
+
+        /* ── UI Overlay ── */
+        .ui-layer {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 10;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 0.3rem 2.5rem 2.5rem;
+        }
+
+        .header-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo { height: 180px; width: auto; }
+
+        .controls-hint {
+            font-size: 0.8rem;
+            font-weight: 400;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            opacity: 0.5;
+        }
+
+        .status-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            font-size: 0.75rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            border-top: 1px solid var(--line);
+            padding-top: 1rem;
+        }
+
+        .speed-indicator {
+            font-family: monospace;
+            font-size: 0.85rem;
+            width: 80px;
+            text-align: right;
+        }
+
+        /* ── Contact Overlay ── */
+        .contact-reveal {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%) scale(0.95);
+            background-color: #e06030;
+            width: 100vw; height: 100vh;
+            z-index: 60;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+                        transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+            color: #FFFFFF;
+        }
+
+        .contact-reveal.active {
+            opacity: 1;
+            pointer-events: all;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .contact-close {
+            position: absolute;
+            top: 2.5rem; right: 2.5rem;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            cursor: pointer;
+            pointer-events: all;
+        }
+
+        .contact-close:hover { opacity: 0.6; }
+
+        .contact-content {
+            text-align: center;
+            width: 80%; max-width: 800px;
+        }
+
+        .contact-title {
+            font-size: clamp(4rem, 10vw, 8rem);
+            font-weight: 100;
+            line-height: 1;
+            letter-spacing: -0.04em;
+            margin-bottom: 2rem;
+            position: relative;
+            display: inline-block;
+        }
+
+        .contact-badge {
+            position: absolute;
+            top: -10px; right: -20px;
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            border: 1px solid var(--text);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: var(--bg);
+            transform: rotate(-10deg);
+            overflow: hidden;
+        }
+
+        .contact-body {
+            font-size: 1.2rem;
+            font-weight: 300;
+            line-height: 1.6;
+            margin-bottom: 4rem;
+        }
+
+        .contact-links {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            border-top: 1px solid rgba(255,255,255,0.3);
+            padding-top: 2rem;
+            text-align: left;
+        }
+
+        .link-group h4 {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 0.5rem;
+            opacity: 0.6;
+            font-weight: 400;
+        }
+
+        .link-group a {
+            color: #FFFFFF;
+            text-decoration: none;
+            font-size: 1rem;
+            font-weight: 400;
+            display: block;
+            margin-bottom: 0.2rem;
+            transition: opacity 0.2s;
+        }
+
+        .link-group a:hover { opacity: 0.5; }
+
+        /* ── Noise texture ── */
+        .noise {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 50;
+            opacity: 0.03;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        }
+
+        @media (max-width: 640px) {
+            .contact-links { grid-template-columns: 1fr; gap: 1.5rem; }
+            .ui-layer { padding: 1.5rem; }
+            .logo { height: 120px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="noise"></div>
+
+    <!-- UI overlay -->
+    <div class="ui-layer">
+        <div class="header-bar">
+            <img src="Brand-Assets/logo.png" class="logo" alt="Feb.">
+            <div class="controls-hint">WASD TO DRIFT</div>
+        </div>
+        <div class="status-footer">
+            <div class="status-text">Find the <span style="color: #e06030;">orange</span> node if you can't wait, or drift</div>
+            <div class="speed-indicator" id="speedDisplay">0 km/h</div>
+        </div>
+    </div>
+
+    <canvas id="gameCanvas"></canvas>
+
+    <!-- Contact overlay -->
+    <div class="contact-reveal" id="contactOverlay">
+        <div class="contact-close" id="closeContact">Close &#10005;</div>
+        <div class="contact-content">
+            <h1 class="contact-title">
+                Hello
+            </h1>
+            <p class="contact-body">
+                The full experience is currently being assembled.<br>
+                In the meantime, feel free to reach out directly or keep drifting.
+            </p>
+            <div class="contact-links">
+                <div class="link-group">
+                    <h4>Direct</h4>
+                    <a href="#">hello@febinsha.com</a>
+                </div>
+                <div class="link-group">
+                    <h4>Connect</h4>
+                    <a href="#">LinkedIn</a>
+                    <a href="#">Twitter/X</a>
+                </div>
+                <div class="link-group">
+                    <h4>Quick Chat</h4>
+                    <a href="#">WhatsApp</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* ── DOM refs ── */
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d', { alpha: false });
+        const speedDisplay = document.getElementById('speedDisplay');
+        const contactOverlay = document.getElementById('contactOverlay');
+        const closeContactBtn = document.getElementById('closeContact');
+
+        /* ── Palette (brand-aligned) ── */
+        const PALETTE = {
+            bg:      '#F3F1E8',
+            dark:    '#121212',
+            accent:  '#c9553a',
+            light:   '#d4765e',
+            cream:   '#FFFFFF',
+            line:    '#DCD9C6',
+            shadow:  'rgba(18, 18, 18, 0.25)'
+        };
+
+        /* ── Constants ── */
+        const PIXEL_SCALE = 4;
+        let width, height;
+        let dpr = window.devicePixelRatio || 1;
+        let frameCount = 0;
+        let isContactOpen = false;
+        let crashTimer = 0; /* >0 means crashed, counts down */
+
+        /* ── Camera ── */
+        let camera = { x: 0, y: 0 };
+
+        /* ── Pixel-art sprites ── */
+        const sprDrive = [
+            "  1111  ",
+            " 122221 ",
+            " 144441 ",
+            "12244221",
+            "12244221",
+            "12444421",
+            "14444441",
+            " 112211 ",
+            "   11   "
+        ];
+
+        const sprCone = [
+            "  11  ",
+            " 1221 ",
+            " 1441 ",
+            " 1221 ",
+            "122221",
+            "111111"
+        ];
+
+        function drawSpriteArray(c, arr, x, y, scale, angle, alpha) {
+            angle = angle || 0;
+            alpha = alpha != null ? alpha : 1;
+            c.save();
+            c.translate(x, y);
+            c.rotate(angle);
+            c.globalAlpha = alpha;
+
+            const w = arr[0].length, h = arr.length;
+            const ox = -(w * scale) / 2, oy = -(h * scale) / 2;
+
+            for (let r = 0; r < h; r++) {
+                for (let col = 0; col < w; col++) {
+                    const ch = arr[r][col];
+                    if (ch === ' ') continue;
+                    switch (ch) {
+                        case '1': c.fillStyle = PALETTE.dark; break;
+                        case '2': c.fillStyle = PALETTE.accent; break;
+                        case '3': c.fillStyle = PALETTE.light; break;
+                        case '4': c.fillStyle = PALETTE.cream; break;
+                    }
+                    c.fillRect(Math.floor(ox + col * scale), Math.floor(oy + r * scale), scale, scale);
+                }
+            }
+            c.restore();
+        }
+
+        /* ── Car ── */
+        const car = {
+            x: 0, y: 150,
+            width: 8 * PIXEL_SCALE,
+            height: 9 * PIXEL_SCALE,
+            angle: -Math.PI / 2,
+            velocity: { x: 0, y: 0 },
+            accel: 0.6,
+            friction: 0.96,
+            turnSpeed: 0.08,
+            maxSpeed: 13,
+            driftFactor: 0.90,
+            score: 0
+        };
+
+        /* ── World objects ── */
+        let obstacles = [];
+        let skidMarks = [];
+        const MAX_SKIDS = 600;
+
+        const contactNode = { x: 700, y: -400, radius: 60, pulse: 0 };
+
+        /* Load white logo for the contact node */
+        const nodeLogo = new Image();
+        nodeLogo.src = 'Brand-Assets/Logo white.svg';
+
+        const envText = [
+            { text: "FEBINSHA.COM",             x: 0,    y: -80,  size: 200, weight: 100, align: "center", tracking: 8 },
+            { text: "SITE UNDER CONSTRUCTION", x: 0,    y: 60,   size: 32,  weight: 300, align: "center", tracking: 4 },
+            { text: "While you wait, drift around.",  x: 0,    y: 250,  size: 14,  weight: 400, align: "center", tracking: 2, color: '#c9553a' }
+        ];
+
+        const envLines = [
+            { x1: -1200, y1: 180, x2: 1200, y2: 180 },
+            { x1: -1200, y1: -500, x2: 1200, y2: -500 },
+            { x1: 400,   y1: -800, x2: 400,  y2: 800 }
+        ];
+
+        /* ── Input ── */
+        const keys = {
+            ArrowUp: false, ArrowDown: false, ArrowLeft: false, ArrowRight: false,
+            w: false, a: false, s: false, d: false
+        };
+
+        window.addEventListener('keydown', (e) => {
+            if (keys.hasOwnProperty(e.key)) keys[e.key] = true;
+            if (['w','a','s','d'].includes(e.key.toLowerCase())) keys[e.key.toLowerCase()] = true;
+            if (e.key === 'Escape' && isContactOpen) closeContact();
+        });
+
+        window.addEventListener('keyup', (e) => {
+            if (keys.hasOwnProperty(e.key)) keys[e.key] = false;
+            if (['w','a','s','d'].includes(e.key.toLowerCase())) keys[e.key.toLowerCase()] = false;
+        });
+
+        /* ── Resize ── */
+        function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width * dpr;
+            canvas.height = height * dpr;
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        }
+        window.addEventListener('resize', resize);
+
+        /* ── Respawn on collision (no game over, just keep drifting) ── */
+        function respawn() {
+            car.x = 0;
+            car.y = 150;
+            car.angle = -Math.PI / 2;
+            car.velocity = { x: 0, y: 0 };
+            car.score = 0;
+            obstacles = [];
+            skidMarks = [];
+            for (let i = 0; i < 4; i++) spawnObstacle();
+        }
+
+        function spawnObstacle() {
+            let ox, oy, tries = 0;
+            /* Bias spawn toward the direction the car is heading */
+            const fwdBias = 0.6;
+            const fwdX = Math.cos(car.angle);
+            const fwdY = Math.sin(car.angle);
+            const minConeDist = 120;
+            do {
+                const a = Math.random() * Math.PI * 2;
+                const d = 250 + Math.random() * 500;
+                ox = car.x + Math.cos(a) * d + fwdX * d * fwdBias;
+                oy = car.y + Math.sin(a) * d + fwdY * d * fwdBias;
+                tries++;
+                const tooClose = obstacles.some(o => Math.hypot(o.x - ox, o.y - oy) < minConeDist);
+                if (Math.hypot(car.x - ox, car.y - oy) >= 150 && !tooClose) break;
+            } while (tries < 30);
+
+            obstacles.push({ x: ox, y: oy, radius: 3 * PIXEL_SCALE });
+        }
+
+        /* Remove far-away cones and keep a healthy count near the car */
+        function cullAndSpawnCones() {
+            const cullDist = 1200;
+            for (let i = obstacles.length - 1; i >= 0; i--) {
+                if (Math.hypot(car.x - obstacles[i].x, car.y - obstacles[i].y) > cullDist) {
+                    obstacles.splice(i, 1);
+                }
+            }
+            const target = 10;
+            while (obstacles.length < target) {
+                spawnObstacle();
+            }
+        }
+
+        function formatScore(s) {
+            return Math.floor(s).toString().padStart(5, '0');
+        }
+
+        /* ── Physics (index.html drift feel) ── */
+        function updatePhysics() {
+            if (isContactOpen) return;
+
+            /* Crash delay — freeze then respawn */
+            if (crashTimer > 0) {
+                crashTimer--;
+                if (crashTimer === 0) respawn();
+                return;
+            }
+
+            const isLeft  = keys.ArrowLeft  || keys.a;
+            const isRight = keys.ArrowRight || keys.d;
+            const isGas   = keys.ArrowUp    || keys.w;
+            const isBrake = keys.ArrowDown  || keys.s;
+
+            if (isLeft)  car.angle -= car.turnSpeed;
+            if (isRight) car.angle += car.turnSpeed;
+
+            const fwdX = Math.cos(car.angle);
+            const fwdY = Math.sin(car.angle);
+
+            if (isGas) {
+                car.velocity.x += fwdX * car.accel;
+                car.velocity.y += fwdY * car.accel;
+            }
+            if (isBrake) {
+                car.velocity.x -= fwdX * car.accel * 0.4;
+                car.velocity.y -= fwdY * car.accel * 0.4;
+            }
+
+            let speed = Math.hypot(car.velocity.x, car.velocity.y);
+            if (speed > car.maxSpeed) {
+                const r = car.maxSpeed / speed;
+                car.velocity.x *= r;
+                car.velocity.y *= r;
+                speed = car.maxSpeed;
+            }
+
+            /* Drift blending */
+            if (speed > 0.1) {
+                const vnx = car.velocity.x / speed;
+                const vny = car.velocity.y / speed;
+                const nx = vnx * car.driftFactor + fwdX * (1 - car.driftFactor);
+                const ny = vny * car.driftFactor + fwdY * (1 - car.driftFactor);
+                const len = Math.hypot(nx, ny);
+                car.velocity.x = (nx / len) * speed;
+                car.velocity.y = (ny / len) * speed;
+
+                /* Slip → skid marks + drift score */
+                const slip = Math.abs(fwdX * vny - fwdY * vnx);
+                if (slip > 0.3 && speed > 3) {
+                    const rd = 4 * PIXEL_SCALE;
+                    const wo = 3 * PIXEL_SCALE;
+                    const rx = car.x - fwdX * rd;
+                    const ry = car.y - fwdY * rd;
+                    const px = Math.cos(car.angle - Math.PI / 2);
+                    const py = Math.sin(car.angle - Math.PI / 2);
+
+                    skidMarks.push(
+                        { x: rx + px * wo, y: ry + py * wo, life: 1.0 },
+                        { x: rx - px * wo, y: ry - py * wo, life: 1.0 }
+                    );
+                    if (skidMarks.length > MAX_SKIDS) skidMarks.splice(0, 2);
+                    car.score += slip * 0.5;
+                }
+            }
+
+            /* Friction */
+            const fr = isBrake ? 0.92 : car.friction;
+            car.velocity.x *= fr;
+            car.velocity.y *= fr;
+
+            /* Move */
+            car.x += car.velocity.x;
+            car.y += car.velocity.y;
+
+            /* No boundaries — car drives freely, world wraps around it */
+
+            /* Score & HUD */
+            speedDisplay.innerText = Math.round(speed * 8) + ' km/h';
+
+            /* Spawn cones — keep area around car populated */
+            cullAndSpawnCones();
+
+            /* Collision — freeze briefly then respawn */
+            for (const obs of obstacles) {
+                if (Math.hypot(car.x - obs.x, car.y - obs.y) < car.width / 2 + obs.radius) {
+                    car.velocity.x = 0;
+                    car.velocity.y = 0;
+                    crashTimer = 60; /* ~1 second pause */
+                    return;
+                }
+            }
+
+            /* Contact node — compute wrapped position for collision */
+            contactNode.pulse += 0.05;
+            if (contactCooldown > 0) contactCooldown--;
+            const WRAP = 4000;
+            const cnWrapX = contactNode.x + Math.round((car.x - contactNode.x) / WRAP) * WRAP;
+            const cnWrapY = contactNode.y + Math.round((car.y - contactNode.y) / WRAP) * WRAP;
+            if (Math.hypot(car.x - cnWrapX, car.y - cnWrapY) < contactNode.radius + 15 && !isContactOpen && contactCooldown === 0) {
+                openContact();
+            }
+
+            /* Camera lerp */
+            camera.x += (car.x - width / 2 - camera.x) * 0.1;
+            camera.y += (car.y - height / 2 - camera.y) * 0.1;
+
+            /* Skid decay */
+            for (let i = skidMarks.length - 1; i >= 0; i--) {
+                skidMarks[i].life -= 0.003;
+                if (skidMarks[i].life <= 0) skidMarks.splice(i, 1);
+            }
+        }
+
+        /* ── Text with letter-spacing ── */
+        function drawSpacedText(c, text, x, y, spacing) {
+            let total = 0;
+            for (let i = 0; i < text.length; i++) total += c.measureText(text[i]).width + spacing;
+            total -= spacing;
+
+            const saved = c.textAlign;
+            let sx = x;
+            if (saved === 'center') sx = x - total / 2;
+            else if (saved === 'right') sx = x - total;
+
+            c.textAlign = 'left';
+            let cx = sx;
+            for (let i = 0; i < text.length; i++) {
+                c.fillText(text[i], cx, y);
+                cx += c.measureText(text[i]).width + spacing;
+            }
+            c.textAlign = saved;
+        }
+
+        /* ── Draw ── */
+        function draw() {
+            ctx.fillStyle = PALETTE.bg;
+            ctx.fillRect(0, 0, width, height);
+
+            ctx.save();
+            ctx.translate(-camera.x, -camera.y);
+
+            /* Grid */
+            ctx.strokeStyle = 'rgba(220, 217, 198, 0.3)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            const gs = 200;
+            const vx0 = camera.x, vx1 = camera.x + width;
+            const vy0 = camera.y, vy1 = camera.y + height;
+            for (let gx = Math.floor(vx0 / gs) * gs; gx <= vx1; gx += gs) { ctx.moveTo(gx, vy0); ctx.lineTo(gx, vy1); }
+            for (let gy = Math.floor(vy0 / gs) * gs; gy <= vy1; gy += gs) { ctx.moveTo(vx0, gy); ctx.lineTo(vx1, gy); }
+            ctx.stroke();
+
+            /* Wrap helper — finds nearest repeat of a world-space point to the camera center */
+            const W = 4000; /* world tile size — must match WRAP in physics */
+            function wrapCoord(wx, wy) {
+                const cx = camera.x + width / 2;
+                const cy = camera.y + height / 2;
+                const dx = wx - cx, dy = wy - cy;
+                return {
+                    x: wx - Math.round(dx / W) * W,
+                    y: wy - Math.round(dy / W) * W
+                };
+            }
+
+            /* Environment lines — wrap */
+            ctx.strokeStyle = PALETTE.line;
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            envLines.forEach(l => {
+                const midX = (l.x1 + l.x2) / 2, midY = (l.y1 + l.y2) / 2;
+                const w = wrapCoord(midX, midY);
+                const offX = w.x - midX, offY = w.y - midY;
+                ctx.moveTo(l.x1 + offX, l.y1 + offY);
+                ctx.lineTo(l.x2 + offX, l.y2 + offY);
+            });
+            ctx.stroke();
+
+            /* Environment text — wrap */
+            envText.forEach(t => {
+                const w = wrapCoord(t.x, t.y);
+                ctx.font = t.weight + ' ' + t.size + "px 'Outfit', sans-serif";
+                ctx.fillStyle = t.color || PALETTE.dark;
+                ctx.textAlign = t.align;
+                ctx.textBaseline = 'middle';
+                if (t.tracking > 0) {
+                    ctx.save();
+                    drawSpacedText(ctx, t.text, w.x, w.y, t.tracking);
+                    ctx.restore();
+                } else {
+                    ctx.fillText(t.text, w.x, w.y);
+                }
+            });
+
+            /* Contact node — wrap */
+            {
+                const w = wrapCoord(contactNode.x, contactNode.y);
+                const pr = contactNode.radius + Math.sin(contactNode.pulse) * 5;
+                ctx.beginPath();
+                ctx.arc(w.x, w.y, pr, 0, Math.PI * 2);
+                ctx.fillStyle = '#e06030';
+                ctx.fill();
+
+                /* Draw white logo inside node */
+                if (nodeLogo.complete && nodeLogo.naturalWidth > 0) {
+                    const logoSize = pr * 1.6;
+                    ctx.drawImage(nodeLogo, w.x - logoSize / 2, w.y - logoSize / 2, logoSize, logoSize);
+                }
+            }
+
+            /* Skid marks */
+            skidMarks.forEach(s => {
+                ctx.beginPath();
+                ctx.arc(s.x, s.y, 2, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(18,18,18,' + (s.life * 0.8) + ')';
+                ctx.fill();
+            });
+
+            /* Cones */
+            for (const obs of obstacles) {
+                ctx.fillStyle = PALETTE.shadow;
+                ctx.fillRect(obs.x - 6, obs.y + 4, 16, 8);
+                drawSpriteArray(ctx, sprCone, obs.x, obs.y, PIXEL_SCALE);
+            }
+
+            /* ── Car ── */
+            /* Shadow */
+            ctx.fillStyle = PALETTE.shadow;
+            ctx.save();
+            ctx.translate(car.x + 4, car.y + 8);
+            ctx.rotate(car.angle);
+            ctx.fillRect(-car.width / 2, -car.height / 2, car.width, car.height);
+            ctx.restore();
+
+            /* Sprite (blink during crash) */
+            if (crashTimer === 0 || frameCount % 10 < 5) {
+                drawSpriteArray(ctx, sprDrive, car.x, car.y, PIXEL_SCALE, car.angle + Math.PI / 2);
+            }
+
+            ctx.restore(); /* camera */
+
+            /* Crash flash overlay */
+            if (crashTimer > 0) {
+                const fade = crashTimer / 60;
+                ctx.fillStyle = PALETTE.dark;
+                ctx.globalAlpha = fade * 0.4;
+                ctx.fillRect(0, 0, width, height);
+                ctx.globalAlpha = 1;
+            }
+
+            frameCount++;
+        }
+
+        /* ── Loop ── */
+        function loop() {
+            updatePhysics();
+            draw();
+            requestAnimationFrame(loop);
+        }
+
+        /* ── Contact overlay ── */
+        function openContact() {
+            isContactOpen = true;
+            contactOverlay.classList.add('active');
+            car.velocity.x = 0;
+            car.velocity.y = 0;
+        }
+
+        let contactCooldown = 0;
+        function closeContact() {
+            isContactOpen = false;
+            contactOverlay.classList.remove('active');
+            contactCooldown = 120;
+            /* Reset car to starting position */
+            car.x = 0;
+            car.y = 150;
+            car.angle = -Math.PI / 2;
+            car.velocity = { x: 0, y: 0 };
+            camera.x = car.x - width / 2;
+            camera.y = car.y - height / 2;
+            skidMarks = [];
+        }
+
+        closeContactBtn.addEventListener('click', closeContact);
+
+        /* ── Init ── */
+        resize();
+        camera.x = car.x - width / 2;
+        camera.y = car.y - height / 2;
+        for (let i = 0; i < 4; i++) spawnObstacle();
+
+        document.fonts.ready.then(() => { loop(); });
+    </script>
+
+</body>
+</html>
