@@ -432,7 +432,7 @@
             .controls-hint { display: none; }
             .controls-hint-mobile { display: block; font-size: 0.55rem; opacity: 0.25; }
             .logo { height: 100px; }
-            .ui-layer { padding: 0.6rem 1rem 0.6rem; }
+            .ui-layer { padding: 0.2rem 1rem 0.4rem; }
             .status-footer { font-size: 0.55rem; padding-top: 0.4rem; }
             .status-text { font-size: 0.55rem; }
             .speed-indicator { font-size: 0.55rem; }
@@ -687,6 +687,14 @@
             driftFactor: 0.90,
             score: 0
         };
+
+        /* ── Mobile tuning ── */
+        const isTouchDevice = 'ontouchstart' in window;
+        if (isTouchDevice) {
+            car.accel = 0.35;
+            car.maxSpeed = 8;
+            car.turnSpeed = 0.07;
+        }
 
         /* ── World objects ── */
         let obstacles = [];
