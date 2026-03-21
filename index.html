@@ -261,10 +261,14 @@
         }
 
         .portrait-lock-mid {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 0.8rem;
+            gap: 1rem;
         }
 
         .portrait-lock-bottom {
@@ -380,8 +384,8 @@
             pointer-events: none;
         }
 
-        .touch-left { left: 1rem; }
-        .touch-right { right: 1rem; flex-direction: column; gap: 0.4rem; }
+        .touch-left { left: 2rem; gap: 1rem; }
+        .touch-right { right: 2rem; flex-direction: column; gap: 0.5rem; }
 
         .touch-btn {
             pointer-events: auto;
@@ -539,12 +543,29 @@
         const contactOverlay = document.getElementById('contactOverlay');
         const closeContactBtn = document.getElementById('closeContact');
         const portraitLock = document.getElementById('portraitLock');
+        const isTouchDevice = 'ontouchstart' in window;
 
         /* ── Portrait lock (mobile) ── */
         let isPortraitLocked = false;
 
+        function requestFullAndLandscape() {
+            const el = document.documentElement;
+            const rfs = el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen;
+            if (rfs) {
+                rfs.call(el).then(() => {
+                    const lockFn = screen.orientation && screen.orientation.lock;
+                    if (lockFn) {
+                        screen.orientation.lock('landscape').catch(() => {});
+                    }
+                }).catch(() => {});
+            }
+        }
+
+        /* Tap portrait overlay to force fullscreen + landscape */
+        portraitLock.addEventListener('click', requestFullAndLandscape);
+
         function checkOrientation() {
-            const isMobile = window.innerWidth <= 900;
+            const isMobile = window.innerWidth <= 900 || isTouchDevice;
             const isPortrait = window.innerHeight > window.innerWidth;
 
             if (isMobile && isPortrait) {
@@ -558,6 +579,10 @@
                     isPortraitLocked = false;
                     portraitLock.classList.remove('visible');
                     setTimeout(() => { portraitLock.style.display = 'none'; }, 400);
+                }
+                /* Auto fullscreen when entering landscape on mobile */
+                if (isMobile && !isPortrait && !document.fullscreenElement) {
+                    requestFullAndLandscape();
                 }
             }
         }
@@ -698,7 +723,6 @@
         };
 
         /* ── Mobile tuning ── */
-        const isTouchDevice = 'ontouchstart' in window;
         if (isTouchDevice) {
             car.accel = 0.35;
             car.maxSpeed = 8;
