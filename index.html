@@ -360,6 +360,83 @@
                 display: flex;
             }
         }
+
+        /* ── Touch Controls ── */
+        .touch-controls {
+            display: none;
+            position: fixed;
+            bottom: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 15;
+            pointer-events: none;
+        }
+
+        .touch-left, .touch-right {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            gap: 0.5rem;
+            pointer-events: none;
+        }
+
+        .touch-left { left: 1rem; }
+        .touch-right { right: 1rem; flex-direction: column; gap: 0.4rem; }
+
+        .touch-btn {
+            pointer-events: auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(18, 18, 18, 0.15);
+            background: rgba(18, 18, 18, 0.04);
+            color: var(--text);
+            font-family: var(--font-main);
+            font-size: 0.6rem;
+            font-weight: 300;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: none;
+            transition: background 0.1s, border-color 0.1s;
+        }
+
+        .touch-btn.active {
+            background: rgba(18, 18, 18, 0.12);
+            border-color: rgba(18, 18, 18, 0.3);
+        }
+
+        .touch-steer {
+            width: 48px;
+            height: 48px;
+            border-radius: 4px;
+        }
+
+        .touch-steer .arrow {
+            font-size: 1rem;
+            opacity: 0.4;
+        }
+
+        .touch-gas, .touch-brake {
+            width: 70px;
+            height: 44px;
+            border-radius: 4px;
+        }
+
+        .touch-hb {
+            display: none;
+        }
+
+        @media (max-width: 900px) and (orientation: landscape) {
+            .touch-controls { display: block; }
+            .controls-hint { display: none; }
+            .controls-hint-mobile { display: block; font-size: 0.55rem; opacity: 0.25; }
+            .logo { height: 100px; }
+            .ui-layer { padding: 0.6rem 1rem 0.6rem; }
+            .status-footer { font-size: 0.55rem; padding-top: 0.4rem; }
+            .status-text { font-size: 0.55rem; }
+            .speed-indicator { font-size: 0.55rem; }
+        }
     </style>
 </head>
 <body>
@@ -374,11 +451,24 @@
 <span class="key">↓</span> <span class="key">S</span><span class="label">BRAKE</span>
 <span class="key">←</span> <span class="key">→</span> <span class="key">A</span> <span class="key">D</span><span class="label">STEER</span>
 <span class="key">SPACE</span><span class="label">HANDBRAKE</span></div>
-            <div class="controls-hint-mobile">Use controls to drive</div>
+            <div class="controls-hint-mobile">Use on-screen buttons to drive</div>
         </div>
         <div class="status-footer">
             <div class="status-text">Find the <span style="color: #e06030;">orange</span> node if you can't wait, or drift</div>
             <div class="speed-indicator" id="speedDisplay">0 km/h</div>
+        </div>
+    </div>
+
+    <!-- Touch controls (mobile landscape) -->
+    <div class="touch-controls" id="touchControls">
+        <div class="touch-left">
+            <div class="touch-btn touch-steer" id="btnLeft"><span class="arrow">&#9664;</span></div>
+            <div class="touch-btn touch-steer" id="btnRight"><span class="arrow">&#9654;</span></div>
+        </div>
+        <div class="touch-right">
+            <div class="touch-btn touch-gas" id="btnGas">Gas</div>
+            <div class="touch-btn touch-brake" id="btnBrake">Brake</div>
+            <div class="touch-btn touch-hb" id="btnHB">HB</div>
         </div>
     </div>
 
@@ -640,6 +730,21 @@
             if (['w','a','s','d'].includes(e.key.toLowerCase())) keys[e.key.toLowerCase()] = false;
             if (e.key === ' ') keys[' '] = false;
         });
+
+        /* ── Touch controls ── */
+        function bindTouch(btnId, keyName) {
+            const btn = document.getElementById(btnId);
+            const press = (e) => { e.preventDefault(); keys[keyName] = true; btn.classList.add('active'); };
+            const release = (e) => { e.preventDefault(); keys[keyName] = false; btn.classList.remove('active'); };
+            btn.addEventListener('touchstart', press, { passive: false });
+            btn.addEventListener('touchend', release, { passive: false });
+            btn.addEventListener('touchcancel', release, { passive: false });
+        }
+        bindTouch('btnLeft', 'ArrowLeft');
+        bindTouch('btnRight', 'ArrowRight');
+        bindTouch('btnGas', 'ArrowUp');
+        bindTouch('btnBrake', 'ArrowDown');
+        bindTouch('btnHB', ' ');
 
         /* ── Resize ── */
         function resize() {
