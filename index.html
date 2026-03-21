@@ -436,6 +436,15 @@
             .status-footer { font-size: 0.55rem; padding-top: 0.4rem; }
             .status-text { font-size: 0.55rem; }
             .speed-indicator { font-size: 0.55rem; }
+
+            /* Contact overlay mobile fit */
+            .contact-close { top: 1rem; right: 1rem; font-size: 0.65rem; }
+            .contact-content { width: 90%; }
+            .contact-title { font-size: clamp(2rem, 6vw, 3.5rem); margin-bottom: 0.8rem; }
+            .contact-body { font-size: 0.8rem; margin-bottom: 1.5rem; line-height: 1.4; }
+            .contact-links { grid-template-columns: repeat(3, 1fr); gap: 1rem; padding-top: 1rem; }
+            .link-group h4 { font-size: 0.6rem; margin-bottom: 0.3rem; }
+            .link-group a { font-size: 0.75rem; }
         }
     </style>
 </head>
@@ -707,10 +716,11 @@
         const nodeLogo = new Image();
         nodeLogo.src = 'Brand-Assets/Logo white.svg';
 
+        const mobileScale = isTouchDevice ? 0.5 : 1;
         const envText = [
-            { text: "FEBINSHA.COM",             x: 0,    y: -80,  size: 180, weight: 100, align: "center", tracking: 8 },
-            { text: "SITE UNDER CONSTRUCTION", x: 0,    y: 60,   size: 32,  weight: 300, align: "center", tracking: 4 },
-            { text: "While you wait, drift around.",  x: 0,    y: 250,  size: 14,  weight: 400, align: "center", tracking: 2, color: '#c9553a' }
+            { text: "FEBINSHA.COM",             x: 0,    y: -80 * mobileScale,  size: 180 * mobileScale, weight: 100, align: "center", tracking: 8 * mobileScale },
+            { text: "SITE UNDER CONSTRUCTION", x: 0,    y: 60 * mobileScale,   size: 32 * mobileScale,  weight: 300, align: "center", tracking: 4 * mobileScale },
+            { text: "While you wait, drift around.",  x: 0,    y: 250 * mobileScale,  size: 14 * mobileScale,  weight: 400, align: "center", tracking: 2, color: '#c9553a' }
         ];
 
         const envLines = [
