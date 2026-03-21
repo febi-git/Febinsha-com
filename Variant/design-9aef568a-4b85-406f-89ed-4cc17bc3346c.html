@@ -1,0 +1,788 @@
+<html lang="en" vid="0"><head vid="1">
+    <meta charset="UTF-8" vid="2">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" vid="3">
+    <title vid="4">Pixel Drift F40</title>
+    <script src="https://cdn.tailwindcss.com/3.4.17" vid="5"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&amp;display=swap" rel="stylesheet" vid="6">
+    <style vid="7">
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #F1E3D3; 
+            font-family: 'Press Start 2P', cursive;
+            user-select: none;
+        }
+
+        #gameCanvas {
+            display: block;
+            image-rendering: pixelated; 
+        }
+
+        
+        .scanlines {
+            background: linear-gradient(
+                to bottom,
+                rgba(255,255,255,0),
+                rgba(255,255,255,0) 50%,
+                rgba(0,0,0,0.05) 50%,
+                rgba(0,0,0,0.05)
+            );
+            background-size: 100% 4px;
+            pointer-events: none;
+        }
+
+        .vignette {
+            background: radial-gradient(circle, rgba(0,0,0,0) 60%, rgba(20,10,10,0.4) 100%);
+            pointer-events: none;
+        }
+
+        .drift-text-anim {
+            animation: pulse 0.5s infinite alternate;
+        }
+
+        @keyframes pulse {
+            from { transform: scale(1); text-shadow: 2px 2px 0px #312328; }
+            to { transform: scale(1.1); text-shadow: 4px 4px 0px #312328; color: #ffeb3b; }
+        }
+
+        
+        ::-webkit-scrollbar { width: 0px; }
+    </style>
+</head>
+<body class="w-screen h-screen text-[#312328]" vid="8">
+
+    
+    <canvas id="gameCanvas" class="absolute top-0 left-0 w-full h-full z-0" vid="9"></canvas>
+
+    
+    <div class="scanlines absolute top-0 left-0 w-full h-full z-40" vid="10"></div>
+    <div class="vignette absolute top-0 left-0 w-full h-full z-40" vid="11"></div>
+
+    
+    <div id="uiLayer" class="absolute top-0 left-0 w-full h-full z-30 pointer-events-none hidden flex-col justify-between p-8" vid="12">
+        
+        <div class="flex justify-between items-start" vid="13">
+            <div class="flex flex-col gap-3" vid="14">
+                <div class="bg-[#F1E3D3] border-4 border-[#312328] p-4 shadow-[8px_8px_0px_rgba(49,35,40,1)]" vid="15">
+                    <h2 class="text-sm text-[#B23A3A] mb-1" vid="16">SCORE</h2>
+                    <div id="scoreDisplay" class="text-2xl text-[#E45B5B]" vid="17">000000</div>
+                </div>
+                
+                <div id="comboContainer" class="bg-[#312328] border-4 border-[#E45B5B] p-2 shadow-[8px_8px_0px_rgba(228,91,91,0.5)] transition-opacity duration-300 opacity-0" vid="18">
+                    <div class="text-xs text-[#F1E3D3]" vid="19">DRIFT MULT</div>
+                    <div id="comboDisplay" class="text-xl text-[#FBE790]" vid="20">x1.0</div>
+                </div>
+            </div>
+
+            <div class="bg-[#F1E3D3] border-4 border-[#312328] p-4 shadow-[8px_8px_0px_rgba(49,35,40,1)] flex flex-col items-end" vid="21">
+                <h2 class="text-sm text-[#B23A3A] mb-1" vid="22">SPEED</h2>
+                <div class="flex items-baseline gap-2" vid="23">
+                    <div id="speedDisplay" class="text-3xl text-[#312328]" vid="24">0</div>
+                    <div class="text-sm text-[#B23A3A]" vid="25">MPH</div>
+                </div>
+                
+                <div class="w-32 h-4 bg-[#DDC1A5] border-2 border-[#312328] mt-2 relative overflow-hidden" vid="26">
+                    <div id="speedBar" class="h-full bg-[#E45B5B] w-0 transition-all duration-75" vid="27"></div>
+                </div>
+            </div>
+        </div>
+
+        
+        <div class="w-full flex justify-center mt-20" vid="28">
+            <h1 id="driftAlert" class="text-5xl text-[#E45B5B] drift-text-anim opacity-0 transition-opacity duration-100 uppercase tracking-widest" vid="29">DRIFTING!</h1>
+        </div>
+
+        
+        <div class="w-full flex justify-between items-end mt-auto text-xs opacity-70" vid="30">
+            <div vid="31">WASD / ARROWS to Drive</div>
+            <div vid="32">SPACE to E-Brake / Drift</div>
+        </div>
+    </div>
+
+    
+    <div id="startScreen" class="absolute top-0 left-0 w-full h-full z-50 bg-[#F1E3D3] flex flex-col items-center justify-center" vid="33">
+        
+        <div class="absolute inset-0 opacity-10 pointer-events-none flex items-center justify-center overflow-hidden" vid="34">
+            <div class="text-[20rem] font-bold text-[#E45B5B] tracking-tighter whitespace-nowrap rotate-[-10deg]" vid="35">F40</div>
+        </div>
+
+        <div class="relative z-10 flex flex-col items-center" vid="36">
+            <h1 class="text-6xl text-[#E45B5B] text-center leading-tight mb-2 drop-shadow-[6px_6px_0px_rgba(49,35,40,1)]" vid="37">
+                PIXEL<br vid="38">DRIFT
+            </h1>
+            <h2 class="text-xl text-[#B23A3A] mb-12 tracking-widest" vid="39">CORSA ROSSA</h2>
+
+            <div class="bg-[#F1E3D3] border-4 border-[#312328] p-8 max-w-lg w-full shadow-[12px_12px_0px_rgba(49,35,40,1)] mb-8" vid="40">
+                <h3 class="text-[#312328] mb-6 text-center border-b-4 border-[#DDC1A5] pb-4" vid="41">CONTROLS</h3>
+                <ul class="space-y-4 text-sm leading-loose" vid="42">
+                    <li class="flex justify-between" vid="43"><span vid="44">ACCELERATE</span> <span class="text-[#E45B5B]" vid="45">W / UP</span></li>
+                    <li class="flex justify-between" vid="46"><span vid="47">BRAKE / REV</span> <span class="text-[#E45B5B]" vid="48">S / DOWN</span></li>
+                    <li class="flex justify-between" vid="49"><span vid="50">STEER</span> <span class="text-[#E45B5B]" vid="51">A D / LEFT RIGHT</span></li>
+                    <li class="flex justify-between" vid="52"><span vid="53">HANDBRAKE</span> <span class="text-[#E45B5B] bg-[#312328] text-white px-2 py-1" vid="54">SPACE</span></li>
+                </ul>
+            </div>
+
+            <button id="startBtn" class="bg-[#E45B5B] text-[#F1E3D3] border-4 border-[#312328] px-8 py-4 text-2xl hover:bg-[#B23A3A] hover:translate-y-1 hover:shadow-[4px_4px_0px_rgba(49,35,40,1)] active:translate-y-2 active:shadow-none shadow-[8px_8px_0px_rgba(49,35,40,1)] transition-all cursor-pointer" vid="55">
+                START ENGINE
+            </button>
+        </div>
+    </div>
+
+<script vid="56">
+
+
+
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d', { alpha: false }); 
+let width = window.innerWidth;
+let height = window.innerHeight;
+
+
+const uiLayer = document.getElementById('uiLayer');
+const startScreen = document.getElementById('startScreen');
+const startBtn = document.getElementById('startBtn');
+const scoreDisplay = document.getElementById('scoreDisplay');
+const speedDisplay = document.getElementById('speedDisplay');
+const speedBar = document.getElementById('speedBar');
+const comboContainer = document.getElementById('comboContainer');
+const comboDisplay = document.getElementById('comboDisplay');
+const driftAlert = document.getElementById('driftAlert');
+
+
+const keys = {
+    w: false, a: false, s: false, d: false,
+    ArrowUp: false, ArrowLeft: false, ArrowDown: false, ArrowRight: false,
+    " ": false 
+};
+
+let gameState = 'START'; 
+let lastTime = 0;
+let camera = { x: 0, y: 0, zoom: 1 };
+
+
+const trackCanvas = document.createElement('canvas');
+const trackCtx = trackCanvas.getContext('2d', { alpha: false });
+const trackSize = 4000; 
+
+const skidCanvas = document.createElement('canvas');
+const skidCtx = skidCanvas.getContext('2d');
+skidCanvas.width = trackSize;
+skidCanvas.height = trackSize;
+
+const carSpriteCanvas = document.createElement('canvas');
+const carCtx = carSpriteCanvas.getContext('2d');
+const CAR_WIDTH = 24;
+const CAR_LENGTH = 52;
+carSpriteCanvas.width = CAR_WIDTH;
+carSpriteCanvas.height = CAR_LENGTH;
+
+
+const PALETTE = {
+    bg: '#F1E3D3',
+    trackLine: '#FDF7F0',
+    trackSurf: '#DDC1A5',
+    trackEdge: '#B89F85',
+    grass: '#E3CCA8',
+    red: '#E45B5B',
+    darkRed: '#B23A3A',
+    black: '#312328',
+    grey: '#8A7B76',
+    yellow: '#FBE790',
+    smoke: 'rgba(221, 193, 165, 0.6)' 
+};
+
+
+function init() {
+    resize();
+    window.addEventListener('resize', resize);
+    
+    
+    window.addEventListener('keydown', (e) => {
+        if(keys.hasOwnProperty(e.key) || e.key === " ") keys[e.key] = true;
+    });
+    window.addEventListener('keyup', (e) => {
+        if(keys.hasOwnProperty(e.key) || e.key === " ") keys[e.key] = false;
+    });
+
+    startBtn.addEventListener('click', startGame);
+
+    generateCarSprite();
+    generateTrack();
+
+    requestAnimationFrame(gameLoop);
+}
+
+function resize() {
+    width = window.innerWidth;
+    height = window.innerHeight;
+    canvas.width = width;
+    canvas.height = height;
+    ctx.imageSmoothingEnabled = false; 
+}
+
+
+
+function generateCarSprite() {
+    
+    carCtx.clearRect(0, 0, CAR_WIDTH, CAR_LENGTH);
+    
+    
+    const drawRect = (x, y, w, h, c) => {
+        carCtx.fillStyle = c;
+        carCtx.fillRect(x, y, w, h);
+    };
+
+    
+    drawRect(2, 4, 20, 44, PALETTE.red);
+    
+    
+    drawRect(4, 0, 16, 4, PALETTE.red);
+    drawRect(6, -2, 12, 2, PALETTE.darkRed); 
+
+    
+    drawRect(4, 18, 16, 12, PALETTE.red);
+
+    
+    carCtx.fillStyle = PALETTE.black;
+    carCtx.beginPath();
+    carCtx.moveTo(4, 18);
+    carCtx.lineTo(20, 18);
+    carCtx.lineTo(18, 12);
+    carCtx.lineTo(6, 12);
+    carCtx.fill();
+
+    
+    drawRect(3, 19, 2, 10, PALETTE.black);
+    drawRect(19, 19, 2, 10, PALETTE.black);
+
+    
+    drawRect(4, 30, 16, 12, PALETTE.black);
+    
+    drawRect(5, 32, 14, 1, '#1A1114');
+    drawRect(5, 35, 14, 1, '#1A1114');
+    drawRect(5, 38, 14, 1, '#1A1114');
+
+    
+    drawRect(1, 44, 2, 6, PALETTE.darkRed); 
+    drawRect(21, 44, 2, 6, PALETTE.darkRed); 
+    drawRect(0, 48, 24, 4, PALETTE.red); 
+
+    
+    drawRect(3, 49, 3, 2, PALETTE.darkRed);
+    drawRect(7, 49, 3, 2, '#FF8A00');
+    drawRect(14, 49, 3, 2, '#FF8A00');
+    drawRect(18, 49, 3, 2, PALETTE.darkRed);
+
+    
+    drawRect(9, 51, 6, 2, '#888');
+
+    
+    drawRect(5, 4, 4, 3, PALETTE.darkRed);
+    drawRect(15, 4, 4, 3, PALETTE.darkRed);
+    
+    
+    drawRect(4, 2, 3, 1, PALETTE.yellow);
+    drawRect(17, 2, 3, 1, PALETTE.yellow);
+}
+
+function generateTrack() {
+    trackCanvas.width = trackSize;
+    trackCanvas.height = trackSize;
+    
+    
+    trackCtx.fillStyle = PALETTE.bg;
+    trackCtx.fillRect(0, 0, trackSize, trackSize);
+
+    
+    trackCtx.strokeStyle = 'rgba(221, 193, 165, 0.3)'; 
+    trackCtx.lineWidth = 2;
+    for(let i=0; i<trackSize; i+=100) {
+        trackCtx.beginPath(); trackCtx.moveTo(i, 0); trackCtx.lineTo(i, trackSize); trackCtx.stroke();
+        trackCtx.beginPath(); trackCtx.moveTo(0, i); trackCtx.lineTo(trackSize, i); trackCtx.stroke();
+    }
+
+    
+    trackCtx.font = "bold 800px 'Press Start 2P', monospace";
+    trackCtx.fillStyle = 'rgba(227, 204, 168, 0.4)'; 
+    trackCtx.textAlign = "center";
+    trackCtx.textBaseline = "middle";
+    trackCtx.save();
+    trackCtx.translate(trackSize/2, trackSize/2);
+    trackCtx.rotate(-Math.PI/6);
+    trackCtx.fillText("CORSA", 0, -400);
+    trackCtx.fillText("ROSSA", 0, 400);
+    trackCtx.restore();
+
+    
+    
+    const points = [
+        {x: 800, y: 3200}, 
+        {x: 3200, y: 3200}, 
+        {x: 3500, y: 2800}, 
+        {x: 3500, y: 1200}, 
+        {x: 2800, y: 500},  
+        {x: 2200, y: 500},  
+        {x: 2000, y: 1500}, 
+        {x: 1500, y: 1500},
+        {x: 1200, y: 800},  
+        {x: 500, y: 800},
+        {x: 500, y: 2500},  
+        {x: 800, y: 3200}   
+    ];
+
+    const trackWidth = 300;
+
+    
+    function drawSpline(ctx, pts, width, color, isDashed = false) {
+        ctx.beginPath();
+        ctx.moveTo(pts[0].x, pts[0].y);
+        
+        
+        
+        for (let i = 0; i < pts.length - 1; i++) {
+            let p0 = pts[i === 0 ? pts.length - 2 : i - 1]; 
+            let p1 = pts[i];
+            let p2 = pts[i + 1];
+            let p3 = pts[i + 2 === pts.length ? 1 : i + 2];
+
+            
+            let t = 0.5;
+            
+            
+            let steps = 20;
+            for(let j=1; j<=steps; j++) {
+                let u = j/steps;
+                let uu = u*u;
+                let uuu = uu*u;
+                
+                
+                let x = 0.5 * (
+                    (2 * p1.x) +
+                    (-p0.x + p2.x) * u +
+                    (2 * p0.x - 5 * p1.x + 4 * p2.x - p3.x) * uu +
+                    (-p0.x + 3 * p1.x - 3 * p2.x + p3.x) * uuu
+                );
+                let y = 0.5 * (
+                    (2 * p1.y) +
+                    (-p0.y + p2.y) * u +
+                    (2 * p0.y - 5 * p1.y + 4 * p2.y - p3.y) * uu +
+                    (-p0.y + 3 * p1.y - 3 * p2.y + p3.y) * uuu
+                );
+                ctx.lineTo(x, y);
+            }
+        }
+        
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.lineWidth = width;
+        ctx.strokeStyle = color;
+        if(isDashed) {
+            ctx.setLineDash([40, 60]);
+        } else {
+            ctx.setLineDash([]);
+        }
+        ctx.stroke();
+    }
+
+    
+    drawSpline(trackCtx, points, trackWidth + 40, PALETTE.trackEdge);
+    
+    
+    drawSpline(trackCtx, points, trackWidth, PALETTE.trackSurf);
+    
+    
+    drawSpline(trackCtx, points, 10, PALETTE.trackLine, true);
+
+    
+    trackCtx.setLineDash([]);
+    trackCtx.lineWidth = trackWidth;
+    trackCtx.strokeStyle = PALETTE.black;
+    trackCtx.beginPath();
+    trackCtx.moveTo(2000, 3200);
+    trackCtx.lineTo(2020, 3200);
+    trackCtx.stroke();
+    
+    
+    trackCtx.lineWidth = trackWidth/5;
+    trackCtx.strokeStyle = 'white';
+    for(let i=0; i<5; i+=2) {
+        trackCtx.beginPath();
+        let offsetY = 3200 - trackWidth/2 + (i * trackWidth/5) + trackWidth/10;
+        trackCtx.moveTo(2000, offsetY);
+        trackCtx.lineTo(2020, offsetY);
+        trackCtx.stroke();
+    }
+}
+
+
+
+class Car {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.width = CAR_WIDTH;
+        this.length = CAR_LENGTH;
+        
+        this.angle = -Math.PI / 2; 
+        this.velocity = { x: 0, y: 0 };
+        
+        
+        this.enginePower = 1500; 
+        this.brakingPower = 3000;
+        this.reversePower = 800;
+        this.maxSpeed = 1200; 
+        this.drag = 0.98; 
+        this.rollingResistance = 0.96; 
+        
+        
+        this.turnSpeed = 2.8; 
+        
+        
+        this.baseGrip = 0.94; 
+        this.driftGrip = 0.98; 
+        this.slideThreshold = 250; 
+        
+        this.isDrifting = false;
+        this.lateralSpeed = 0;
+        this.forwardSpeed = 0;
+    }
+
+    update(dt) {
+        
+        const throttle = (keys.w || keys.ArrowUp) ? 1 : 0;
+        const brake = (keys.s || keys.ArrowDown) ? 1 : 0;
+        const steerLeft = (keys.a || keys.ArrowLeft) ? 1 : 0;
+        const steerRight = (keys.d || keys.ArrowRight) ? 1 : 0;
+        const eBrake = keys[" "];
+
+        
+        const headingX = Math.cos(this.angle);
+        const headingY = Math.sin(this.angle);
+        const rightX = Math.cos(this.angle + Math.PI/2);
+        const rightY = Math.sin(this.angle + Math.PI/2);
+
+        
+        this.forwardSpeed = (this.velocity.x * headingX) + (this.velocity.y * headingY);
+        this.lateralSpeed = (this.velocity.x * rightX) + (this.velocity.y * rightY);
+
+        
+        const speed = Math.sqrt(this.velocity.x**2 + this.velocity.y**2);
+
+        
+        if (throttle) {
+            this.forwardSpeed += this.enginePower * dt;
+        }
+        if (brake) {
+            if (this.forwardSpeed > 0) {
+                this.forwardSpeed -= this.brakingPower * dt; 
+                if(this.forwardSpeed < 0) this.forwardSpeed = 0;
+            } else {
+                this.forwardSpeed -= this.reversePower * dt; 
+            }
+        }
+
+        
+        if (this.forwardSpeed > this.maxSpeed) this.forwardSpeed = this.maxSpeed;
+        if (this.forwardSpeed < -this.maxSpeed/2) this.forwardSpeed = -this.maxSpeed/2; 
+
+        
+        
+        if (Math.abs(this.forwardSpeed) > 10) {
+            
+            let speedFactor = Math.min(Math.abs(this.forwardSpeed) / 400, 1);
+            
+            if(Math.abs(this.forwardSpeed) > 600) {
+                speedFactor = Math.max(0.5, 1 - ((Math.abs(this.forwardSpeed)-600) / 1000));
+            }
+            
+            let steerForce = this.turnSpeed * speedFactor * dt;
+            
+            
+            const dir = Math.sign(this.forwardSpeed);
+            
+            if (steerLeft) this.angle -= steerForce * dir;
+            if (steerRight) this.angle += steerForce * dir;
+        }
+
+        
+        
+        
+        let currentGrip = eBrake ? this.driftGrip : this.baseGrip;
+        
+        
+        this.isDrifting = Math.abs(this.lateralSpeed) > this.slideThreshold && speed > 200;
+        
+        if (this.isDrifting && !eBrake) {
+            currentGrip = 0.96; 
+        }
+
+        
+        
+        
+        this.lateralSpeed *= currentGrip;
+
+        
+        this.forwardSpeed *= this.drag * this.rollingResistance;
+
+        
+        this.velocity.x = (headingX * this.forwardSpeed) + (rightX * this.lateralSpeed);
+        this.velocity.y = (headingY * this.forwardSpeed) + (rightY * this.lateralSpeed);
+
+        
+        this.x += this.velocity.x * dt;
+        this.y += this.velocity.y * dt;
+
+        
+        if (this.isDrifting || eBrake) {
+            this.generateSkidMarks(rightX, rightY, headingX, headingY);
+            if (Math.random() > 0.3) {
+                particles.push(new Smoke(this.x, this.y, this.velocity.x, this.velocity.y));
+            }
+        }
+    }
+
+    generateSkidMarks(rX, rY, hX, hY) {
+        
+        
+        const rearDist = CAR_LENGTH * 0.4;
+        const widthDist = CAR_WIDTH * 0.4;
+
+        
+        const rx = this.x - hX * rearDist;
+        const ry = this.y - hY * rearDist;
+
+        
+        const lrX = rx - rX * widthDist;
+        const lrY = ry - rY * widthDist;
+
+        
+        const rrX = rx + rX * widthDist;
+        const rrY = ry + rY * widthDist;
+
+        
+        skidCtx.fillStyle = 'rgba(49, 35, 40, 0.15)'; 
+        
+        skidCtx.beginPath(); skidCtx.arc(lrX, lrY, 3, 0, Math.PI*2); skidCtx.fill();
+        skidCtx.beginPath(); skidCtx.arc(rrX, rrY, 3, 0, Math.PI*2); skidCtx.fill();
+    }
+
+    draw(ctx) {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        
+        ctx.rotate(this.angle + Math.PI/2); 
+        
+        
+        ctx.drawImage(carSpriteCanvas, -CAR_WIDTH/2, -CAR_LENGTH/2);
+        
+        
+        if (keys.s || keys.ArrowDown || keys[" "]) {
+            ctx.fillStyle = '#FFA5A5';
+            ctx.shadowColor = '#FF0000';
+            ctx.shadowBlur = 10;
+            ctx.fillRect(-CAR_WIDTH/2 + 3, CAR_LENGTH/2 - 3, 3, 3);
+            ctx.fillRect(CAR_WIDTH/2 - 6, CAR_LENGTH/2 - 3, 3, 3);
+            ctx.shadowBlur = 0; 
+        }
+
+        ctx.restore();
+    }
+}
+
+class Smoke {
+    constructor(x, y, vx, vy) {
+        this.x = x + (Math.random() - 0.5) * 20;
+        this.y = y + (Math.random() - 0.5) * 20;
+        
+        this.vx = -vx * 0.1 + (Math.random() - 0.5) * 50;
+        this.vy = -vy * 0.1 + (Math.random() - 0.5) * 50;
+        this.life = 1.0;
+        this.decay = 0.01 + Math.random() * 0.02;
+        this.size = 5 + Math.random() * 10;
+        this.growth = 20;
+    }
+
+    update(dt) {
+        this.x += this.vx * dt;
+        this.y += this.vy * dt;
+        this.life -= this.decay;
+        this.size += this.growth * dt;
+    }
+
+    draw(ctx) {
+        if(this.life <= 0) return;
+        ctx.fillStyle = `rgba(221, 193, 165, ${this.life * 0.5})`; 
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI*2);
+        ctx.fill();
+    }
+}
+
+
+let player;
+let particles = [];
+let score = 0;
+let driftCombo = 1.0;
+let driftTimer = 0;
+let lastSkidFadeTime = 0;
+
+function startGame() {
+    gameState = 'PLAYING';
+    startScreen.classList.add('hidden');
+    uiLayer.classList.remove('hidden');
+    uiLayer.classList.add('flex');
+
+    
+    player = new Car(2000, 3100);
+    player.angle = 0; 
+    score = 0;
+    driftCombo = 1.0;
+    particles = [];
+    
+    
+    skidCtx.clearRect(0,0,trackSize,trackSize);
+
+    lastTime = performance.now();
+    requestAnimationFrame(gameLoop);
+}
+
+function updateUI() {
+    
+    scoreDisplay.innerText = Math.floor(score).toString().padStart(6, '0');
+    
+    
+    const speedMPH = Math.abs(Math.floor(player.forwardSpeed * 0.1)); 
+    speedDisplay.innerText = speedMPH;
+    
+    
+    const speedPct = Math.min((speedMPH / 120) * 100, 100);
+    speedBar.style.width = `${speedPct}%`;
+
+    
+    if (player.isDrifting) {
+        driftAlert.classList.remove('opacity-0');
+        comboContainer.classList.remove('opacity-0');
+        comboDisplay.innerText = `x${driftCombo.toFixed(1)}`;
+        
+        
+        if(driftCombo > 3) comboDisplay.style.color = '#E45B5B';
+        else if(driftCombo > 2) comboDisplay.style.color = '#FF8A00';
+        else comboDisplay.style.color = PALETTE.yellow;
+        
+    } else {
+        driftAlert.classList.add('opacity-0');
+        if (driftTimer <= 0) {
+            comboContainer.classList.add('opacity-0');
+        }
+    }
+}
+
+function updateLogic(dt) {
+    player.update(dt);
+
+    
+    if (player.isDrifting) {
+        
+        const driftPoints = (Math.abs(player.lateralSpeed) / 100) * driftCombo * dt * 50;
+        score += driftPoints;
+        
+        
+        driftCombo += 0.5 * dt;
+        if(driftCombo > 5.0) driftCombo = 5.0; 
+        
+        driftTimer = 1.5; 
+    } else {
+        if (driftTimer > 0) {
+            driftTimer -= dt;
+        } else {
+            driftCombo = 1.0;
+        }
+    }
+
+    
+    for (let i = particles.length - 1; i >= 0; i--) {
+        particles[i].update(dt);
+        if (particles[i].life <= 0) {
+            particles.splice(i, 1);
+        }
+    }
+
+    
+    const now = performance.now();
+    if(now - lastSkidFadeTime > 1000) { 
+        skidCtx.fillStyle = `rgba(241, 227, 211, 0.05)`; 
+        skidCtx.fillRect(0,0,trackSize,trackSize);
+        lastSkidFadeTime = now;
+    }
+
+    
+    
+    let targetX = player.x - width / 2;
+    let targetY = player.y - height / 2;
+
+    
+    targetX += player.velocity.x * 0.5;
+    targetY += player.velocity.y * 0.5;
+
+    
+    camera.x += (targetX - camera.x) * 5 * dt;
+    camera.y += (targetY - camera.y) * 5 * dt;
+
+    
+    const currentSpeed = Math.sqrt(player.velocity.x**2 + player.velocity.y**2);
+    const targetZoom = 1.0 - (currentSpeed / player.maxSpeed) * 0.3; 
+    camera.zoom += (targetZoom - camera.zoom) * 2 * dt;
+}
+
+function render() {
+    
+    ctx.fillStyle = PALETTE.bg;
+    ctx.fillRect(0, 0, width, height);
+
+    ctx.save();
+    
+    
+    
+    ctx.translate(width/2, height/2);
+    ctx.scale(camera.zoom, camera.zoom);
+    ctx.translate(-width/2, -height/2);
+    ctx.translate(-camera.x, -camera.y);
+
+    
+    ctx.drawImage(trackCanvas, 0, 0);
+
+    
+    ctx.drawImage(skidCanvas, 0, 0);
+
+    
+    for (const p of particles) {
+        p.draw(ctx);
+    }
+
+    
+    player.draw(ctx);
+
+    ctx.restore();
+}
+
+function gameLoop(timestamp) {
+    if (gameState !== 'PLAYING') return;
+
+    
+    let dt = (timestamp - lastTime) / 1000;
+    if (dt > 0.1) dt = 0.1; 
+    lastTime = timestamp;
+
+    updateLogic(dt);
+    render();
+    updateUI();
+
+    requestAnimationFrame(gameLoop);
+}
+
+
+window.onload = init;
+
+</script>
+
+</body></html>

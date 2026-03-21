@@ -58,11 +58,43 @@
         .logo { height: 180px; width: auto; }
 
         .controls-hint {
-            font-size: 0.8rem;
-            font-weight: 400;
-            letter-spacing: 0.05em;
+            font-size: 0.7rem;
+            font-weight: 300;
+            letter-spacing: 0.25em;
             text-transform: uppercase;
             opacity: 0.5;
+            color: var(--text);
+            line-height: 1.9;
+            text-align: right;
+            font-family: 'Outfit', sans-serif;
+            white-space: pre;
+        }
+
+        .controls-hint .key {
+            display: inline-block;
+            min-width: 1.2em;
+            text-align: center;
+            letter-spacing: 0;
+        }
+
+        .controls-hint .label {
+            letter-spacing: 0.25em;
+            margin-left: 0.6em;
+            opacity: 0.7;
+        }
+
+        .controls-hint-mobile {
+            display: none;
+            font-size: 0.65rem;
+            font-weight: 300;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            opacity: 0.3;
+        }
+
+        @media (max-width: 640px) {
+            .controls-hint { display: none; }
+            .controls-hint-mobile { display: block; }
         }
 
         .status-footer {
@@ -211,7 +243,11 @@
     <div class="ui-layer">
         <div class="header-bar">
             <img src="Brand-Assets/logo.png" class="logo" alt="Feb.">
-            <div class="controls-hint">WASD TO DRIFT</div>
+            <div class="controls-hint"><span class="key">↑</span> <span class="key">W</span><span class="label">THROTTLE</span>
+<span class="key">↓</span> <span class="key">S</span><span class="label">BRAKE</span>
+<span class="key">←</span> <span class="key">→</span> <span class="key">A</span> <span class="key">D</span><span class="label">STEER</span>
+<span class="key">SPACE</span><span class="label">HANDBRAKE</span></div>
+            <div class="controls-hint-mobile">Use controls to drive</div>
         </div>
         <div class="status-footer">
             <div class="status-text">Find the <span style="color: #e06030;">orange</span> node if you can't wait, or drift</div>
@@ -281,18 +317,6 @@
         let camera = { x: 0, y: 0 };
 
         /* ── Pixel-art sprites ── */
-        const sprDrive = [
-            "  1111  ",
-            " 122221 ",
-            " 144441 ",
-            "12244221",
-            "12244221",
-            "12444421",
-            "14444441",
-            " 112211 ",
-            "   11   "
-        ];
-
         const sprCone = [
             "  11  ",
             " 1221 ",
@@ -301,6 +325,64 @@
             "122221",
             "111111"
         ];
+
+        /* F40 car sprite (pre-rendered canvas) */
+        const CAR_SPR_W = 24;
+        const CAR_SPR_H = 52;
+        const CAR_SCALE = 0.8;
+        const carSpriteCanvas = document.createElement('canvas');
+        carSpriteCanvas.width = CAR_SPR_W;
+        carSpriteCanvas.height = CAR_SPR_H;
+
+        function generateCarSprite() {
+            const cc = carSpriteCanvas.getContext('2d');
+            cc.clearRect(0, 0, CAR_SPR_W, CAR_SPR_H);
+            const dr = (x, y, w, h, c) => { cc.fillStyle = c; cc.fillRect(x, y, w, h); };
+
+            const body   = PALETTE.accent;   // #c9553a
+            const dark   = '#8B2500';         // darker accent
+            const blk    = PALETTE.dark;      // #121212
+            const yellow = '#FBE790';
+            const orange = '#e06030';
+
+            // Main body
+            dr(2, 4, 20, 44, body);
+            // Nose
+            dr(4, 0, 16, 4, body);
+            dr(6, -2, 12, 2, dark);
+            // Cabin roof
+            dr(4, 18, 16, 12, body);
+            // Windshield
+            cc.fillStyle = blk;
+            cc.beginPath();
+            cc.moveTo(4, 18); cc.lineTo(20, 18); cc.lineTo(18, 12); cc.lineTo(6, 12);
+            cc.fill();
+            // A-pillars
+            dr(3, 19, 2, 10, blk);
+            dr(19, 19, 2, 10, blk);
+            // Rear window + louvers
+            dr(4, 30, 16, 12, blk);
+            dr(5, 32, 14, 1, '#1A1114');
+            dr(5, 35, 14, 1, '#1A1114');
+            dr(5, 38, 14, 1, '#1A1114');
+            // Rear fenders
+            dr(1, 44, 2, 6, dark);
+            dr(21, 44, 2, 6, dark);
+            dr(0, 48, 24, 4, body);
+            // Tail lights
+            dr(3, 49, 3, 2, dark);
+            dr(7, 49, 3, 2, orange);
+            dr(14, 49, 3, 2, orange);
+            dr(18, 49, 3, 2, dark);
+            // Exhaust
+            dr(9, 51, 6, 2, '#888');
+            // Front intakes
+            dr(5, 4, 4, 3, dark);
+            dr(15, 4, 4, 3, dark);
+            // Headlights
+            dr(4, 2, 3, 1, yellow);
+            dr(17, 2, 3, 1, yellow);
+        }
 
         function drawSpriteArray(c, arr, x, y, scale, angle, alpha) {
             angle = angle || 0;
@@ -332,8 +414,8 @@
         /* ── Car ── */
         const car = {
             x: 0, y: 150,
-            width: 8 * PIXEL_SCALE,
-            height: 9 * PIXEL_SCALE,
+            width: CAR_SPR_W * CAR_SCALE,
+            height: CAR_SPR_H * CAR_SCALE,
             angle: -Math.PI / 2,
             velocity: { x: 0, y: 0 },
             accel: 0.6,
@@ -370,18 +452,21 @@
         /* ── Input ── */
         const keys = {
             ArrowUp: false, ArrowDown: false, ArrowLeft: false, ArrowRight: false,
-            w: false, a: false, s: false, d: false
+            w: false, a: false, s: false, d: false,
+            ' ': false
         };
 
         window.addEventListener('keydown', (e) => {
             if (keys.hasOwnProperty(e.key)) keys[e.key] = true;
             if (['w','a','s','d'].includes(e.key.toLowerCase())) keys[e.key.toLowerCase()] = true;
+            if (e.key === ' ') { keys[' '] = true; e.preventDefault(); }
             if (e.key === 'Escape' && isContactOpen) closeContact();
         });
 
         window.addEventListener('keyup', (e) => {
             if (keys.hasOwnProperty(e.key)) keys[e.key] = false;
             if (['w','a','s','d'].includes(e.key.toLowerCase())) keys[e.key.toLowerCase()] = false;
+            if (e.key === ' ') keys[' '] = false;
         });
 
         /* ── Resize ── */
@@ -459,6 +544,7 @@
             const isRight = keys.ArrowRight || keys.d;
             const isGas   = keys.ArrowUp    || keys.w;
             const isBrake = keys.ArrowDown  || keys.s;
+            const isHandbrake = keys[' '];
 
             if (isLeft)  car.angle -= car.turnSpeed;
             if (isRight) car.angle += car.turnSpeed;
@@ -493,11 +579,14 @@
                 car.velocity.x = (nx / len) * speed;
                 car.velocity.y = (ny / len) * speed;
 
-                /* Slip → skid marks + drift score */
+                /* Slip → slow down + skid marks + drift score */
                 const slip = Math.abs(fwdX * vny - fwdY * vnx);
                 if (slip > 0.3 && speed > 3) {
-                    const rd = 4 * PIXEL_SCALE;
-                    const wo = 3 * PIXEL_SCALE;
+                    const driftDrag = 0.97;
+                    car.velocity.x *= driftDrag;
+                    car.velocity.y *= driftDrag;
+                    const rd = CAR_SPR_H * 0.4;
+                    const wo = CAR_SPR_W * 0.4;
                     const rx = car.x - fwdX * rd;
                     const ry = car.y - fwdY * rd;
                     const px = Math.cos(car.angle - Math.PI / 2);
@@ -513,7 +602,14 @@
             }
 
             /* Friction */
-            const fr = isBrake ? 0.92 : car.friction;
+            const fr = isHandbrake ? 0.94 : (isBrake ? 0.92 : car.friction);
+
+            /* Handbrake — loosen rear grip for easier drifts */
+            if (isHandbrake && speed > 2) {
+                car.driftFactor = 0.96;
+            } else {
+                car.driftFactor = 0.90;
+            }
             car.velocity.x *= fr;
             car.velocity.y *= fr;
 
@@ -666,8 +762,14 @@
 
             /* Cones */
             for (const obs of obstacles) {
-                ctx.fillStyle = PALETTE.shadow;
-                ctx.fillRect(obs.x - 6, obs.y + 4, 16, 8);
+                ctx.save();
+                ctx.translate(obs.x + 2, obs.y + 6);
+                ctx.scale(1, 0.5);
+                ctx.beginPath();
+                ctx.arc(0, 0, 12, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(18, 18, 18, 0.15)';
+                ctx.fill();
+                ctx.restore();
                 drawSpriteArray(ctx, sprCone, obs.x, obs.y, PIXEL_SCALE);
             }
 
@@ -675,14 +777,20 @@
             /* Shadow */
             ctx.fillStyle = PALETTE.shadow;
             ctx.save();
-            ctx.translate(car.x + 4, car.y + 8);
-            ctx.rotate(car.angle);
-            ctx.fillRect(-car.width / 2, -car.height / 2, car.width, car.height);
+            ctx.translate(car.x + 3, car.y + 6);
+            ctx.rotate(car.angle + Math.PI / 2);
+            ctx.scale(CAR_SCALE, CAR_SCALE);
+            ctx.fillRect(-CAR_SPR_W / 2, -CAR_SPR_H / 2, CAR_SPR_W, CAR_SPR_H);
             ctx.restore();
 
-            /* Sprite (blink during crash) */
+            /* F40 sprite (blink during crash) */
             if (crashTimer === 0 || frameCount % 10 < 5) {
-                drawSpriteArray(ctx, sprDrive, car.x, car.y, PIXEL_SCALE, car.angle + Math.PI / 2);
+                ctx.save();
+                ctx.translate(car.x, car.y);
+                ctx.rotate(car.angle + Math.PI / 2);
+                ctx.scale(CAR_SCALE, CAR_SCALE);
+                ctx.drawImage(carSpriteCanvas, -CAR_SPR_W / 2, -CAR_SPR_H / 2);
+                ctx.restore();
             }
 
             ctx.restore(); /* camera */
@@ -732,6 +840,7 @@
         closeContactBtn.addEventListener('click', closeContact);
 
         /* ── Init ── */
+        generateCarSprite();
         resize();
         camera.x = car.x - width / 2;
         camera.y = car.y - height / 2;
