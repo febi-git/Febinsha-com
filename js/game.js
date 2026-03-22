@@ -190,7 +190,7 @@
         var fwdBias = 0.6;
         var fwdX = Math.cos(car.angle);
         var fwdY = Math.sin(car.angle);
-        var minConeDist = ui.isTouchDevice ? 80 : 120;
+        var minConeDist = ui.isTouchDevice ? 100 : 120;
         do {
             var a = Math.random() * Math.PI * 2;
             var d = ui.isTouchDevice ? (150 + Math.random() * 300) : (250 + Math.random() * 500);
@@ -212,7 +212,7 @@
                 obstacles.splice(i, 1);
             }
         }
-        var target = 10;
+        var target = ui.isTouchDevice ? 10 : 11;
         while (obstacles.length < target) {
             spawnObstacle();
         }
