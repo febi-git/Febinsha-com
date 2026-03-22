@@ -33,10 +33,11 @@
         document.body.classList.add('is-touch');
     }
 
-    /* Detect if fullscreen API is available (not in Instagram/in-app browsers) */
+    /* Detect in-app browsers (Instagram, Facebook, etc.) that expose fullscreen API but silently fail */
+    var isInAppBrowser = /Instagram|FBAN|FBAV|Twitter|Line\/|Snapchat|WhatsApp/i.test(navigator.userAgent);
     var canFullscreen = !!(document.documentElement.requestFullscreen ||
                            document.documentElement.webkitRequestFullscreen);
-    if (!canFullscreen && isTouchDevice) {
+    if ((!canFullscreen || isInAppBrowser) && isTouchDevice) {
         document.body.classList.add('no-fullscreen');
     }
 
@@ -47,7 +48,7 @@
     var lockTextEl = document.getElementById('lockText');
     if (isIOS) {
         lockTextEl.textContent = cfg.ui.lockTextIOS;
-    } else if (!canFullscreen) {
+    } else if (!canFullscreen || isInAppBrowser) {
         /* In-app browsers (Instagram, etc.) can't do fullscreen — tell user to rotate */
         lockTextEl.textContent = cfg.ui.lockTextNoFullscreen || 'Rotate to landscape to drift';
     } else {
@@ -97,14 +98,16 @@
         }
     }
 
+    var touchControls = document.getElementById('touchControls');
+
     function onFirstTouch() {
-        if (isTouchDevice && !document.fullscreenElement && canFullscreen) {
+        if (isTouchDevice && !document.fullscreenElement && canFullscreen && !isInAppBrowser) {
             requestFullAndLandscape();
         }
     }
 
     function dismissPortraitLock() {
-        if (!canFullscreen && isTouchDevice) {
+        if ((!canFullscreen || isInAppBrowser) && isTouchDevice) {
             /* In-app browsers (Instagram, etc.) — dismiss lock on tap so user can play */
             isPortraitLocked = false;
             portraitLock.classList.remove('visible');
@@ -117,8 +120,6 @@
 
     portraitLock.addEventListener('click', dismissPortraitLock);
     canvas.addEventListener('touchstart', onFirstTouch, { once: true, passive: true });
-
-    var touchControls = document.getElementById('touchControls');
 
     function checkOrientation() {
         var isMobile = window.innerWidth <= 900 || isTouchDevice;
@@ -177,7 +178,7 @@
             e.preventDefault();
             keys[keyName] = true;
             btn.classList.add('active');
-            if (canFullscreen && !document.fullscreenElement) requestFullAndLandscape();
+            if (canFullscreen && !isInAppBrowser && !document.fullscreenElement) requestFullAndLandscape();
         };
         var release = function (e) {
             e.preventDefault();
@@ -209,7 +210,7 @@
         if (window.Game) {
             window.Game.resetCar();
         }
-        if (isTouchDevice && canFullscreen && !document.fullscreenElement) {
+        if (isTouchDevice && canFullscreen && !isInAppBrowser && !document.fullscreenElement) {
             requestFullAndLandscape();
         }
     }
