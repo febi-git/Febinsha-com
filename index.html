@@ -362,37 +362,26 @@
             100% { opacity: 0; transform: translate(-50%, -50%) scale(1.5); }
         }
 
-        /* Tilt arrow icon (iOS) */
-        .tilt-arrow-icon {
+        /* Tilt hint (iOS) */
+        .tilt-hint {
             display: none;
-            width: 48px;
-            height: 48px;
-            position: relative;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.8rem;
         }
 
-        .tilt-arrow-icon svg {
-            width: 100%;
-            height: 100%;
-            fill: none;
-            stroke: var(--text);
-            stroke-width: 1.5;
-            stroke-linecap: round;
-            stroke-linejoin: round;
-            opacity: 0.35;
-            animation: arrowRotate 2.5s ease-in-out infinite;
-            transform-origin: center center;
+        .tilt-hint-degree {
+            font-family: var(--font-main);
+            font-weight: 300;
+            font-size: 2.4rem;
+            letter-spacing: 0.05em;
+            color: var(--text);
+            opacity: 0.3;
+            transform: none;
         }
 
-        @keyframes arrowRotate {
-            0%, 100% { transform: rotate(0deg); opacity: 0.35; }
-            20% { opacity: 0.5; }
-            40% { transform: rotate(90deg); opacity: 0.5; }
-            65% { transform: rotate(90deg); opacity: 0.35; }
-            85% { transform: rotate(0deg); opacity: 0.35; }
-        }
-
-        .is-ios .tilt-arrow-icon {
-            display: block;
+        .is-ios .tilt-hint {
+            display: flex;
         }
 
         .is-ios .tap-hand {
@@ -582,11 +571,8 @@
                 </svg>
                 <div class="tap-hand-ripple"></div>
             </div>
-            <div class="tilt-arrow-icon" id="tiltArrow">
-                <svg viewBox="0 0 24 24">
-                    <path d="M 4 12 A 8 8 0 1 1 12 20"/>
-                    <polyline points="4 8 4 12 8 12"/>
-                </svg>
+            <div class="tilt-hint" id="tiltHint">
+                <span class="tilt-hint-degree">(90°)</span>
             </div>
             <p id="lockText">Tap to drift</p>
         </div>
