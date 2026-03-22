@@ -1,0 +1,589 @@
+:root {
+    --bg: #F3F1E8;
+    --text: #121212;
+    --accent: #e06030;
+    --line: #DCD9C6;
+    --font-main: 'Outfit', sans-serif;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
+
+body, html {
+    width: 100%; height: 100%;
+    overflow: hidden;
+    background-color: var(--bg);
+    color: var(--text);
+    font-family: var(--font-main);
+    cursor: crosshair;
+}
+
+#gameCanvas {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 1;
+}
+
+/* ── UI Overlay ── */
+.ui-layer {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 10;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 0.3rem 2.5rem 2.5rem;
+}
+
+.header-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo { height: 180px; width: auto; }
+
+.controls-hint {
+    font-size: 0.7rem;
+    font-weight: 300;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    opacity: 0.8;
+    color: var(--text);
+    line-height: 1.9;
+    text-align: right;
+    font-family: 'Outfit', sans-serif;
+    white-space: pre;
+}
+
+.controls-hint .key {
+    display: inline-block;
+    min-width: 1.2em;
+    text-align: center;
+    letter-spacing: 0;
+}
+
+.controls-hint .label {
+    letter-spacing: 0.25em;
+    margin-left: 0.6em;
+    opacity: 0.85;
+}
+
+.controls-hint-mobile {
+    display: none;
+    font-size: 0.65rem;
+    font-weight: 300;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    opacity: 0.7;
+}
+
+@media (max-width: 640px) {
+    .controls-hint { display: none; }
+    .controls-hint-mobile { display: block; }
+}
+
+.status-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border-top: 1px solid var(--line);
+    padding-top: 1rem;
+}
+
+.speed-indicator {
+    font-family: monospace;
+    font-size: 0.85rem;
+    width: 80px;
+    text-align: right;
+}
+
+/* ── Contact Overlay ── */
+.contact-reveal {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%) scale(0.95);
+    background-color: #e06030;
+    width: 100vw; height: 100vh;
+    z-index: 60;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    color: #FFFFFF;
+}
+
+.contact-reveal.active {
+    opacity: 1;
+    pointer-events: all;
+    transform: translate(-50%, -50%) scale(1);
+}
+
+.contact-close {
+    position: absolute;
+    top: 2.5rem; right: 2.5rem;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    pointer-events: all;
+}
+
+.contact-close:hover { opacity: 0.6; }
+
+.contact-content {
+    text-align: center;
+    width: 90%; max-width: 900px;
+}
+
+.contact-title {
+    font-size: clamp(4rem, 10vw, 8rem);
+    font-weight: 100;
+    line-height: 1;
+    letter-spacing: -0.04em;
+    margin-bottom: 2rem;
+    position: relative;
+    display: inline-block;
+}
+
+.contact-badge {
+    position: absolute;
+    top: -10px; right: -20px;
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    border: 1px solid var(--text);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: var(--bg);
+    transform: rotate(-10deg);
+    overflow: hidden;
+}
+
+.contact-body {
+    font-size: 1.2rem;
+    font-weight: 300;
+    line-height: 1.6;
+    margin-bottom: 4rem;
+}
+
+.contact-links {
+    display: flex;
+    justify-content: space-between;
+    border-top: 1px solid rgba(255,255,255,0.3);
+    padding-top: 2rem;
+    text-align: left;
+    width: 100%;
+}
+
+.link-group h4 {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 0.5rem;
+    opacity: 0.6;
+    font-weight: 400;
+}
+
+.link-group a {
+    color: #FFFFFF;
+    text-decoration: none;
+    font-size: 1rem;
+    font-weight: 400;
+    display: block;
+    margin-bottom: 0.2rem;
+    transition: opacity 0.2s;
+}
+
+.link-group a:hover { opacity: 0.5; }
+
+/* ── Noise texture ── */
+.noise {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 50;
+    opacity: 0.03;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+}
+
+@media (max-width: 640px) {
+    .contact-links { flex-direction: column; gap: 1.5rem; }
+    .ui-layer { padding: 1.5rem; }
+    .logo { height: 120px; }
+}
+
+/* ── Portrait Lock Overlay ── */
+.portrait-lock {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 40;
+    background-color: var(--bg);
+    background-image:
+        linear-gradient(rgba(220, 217, 198, 0.3) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(220, 217, 198, 0.3) 1px, transparent 1px);
+    background-size: 60px 60px;
+    display: none;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    text-align: center;
+    padding: 3rem 2rem;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+}
+
+.portrait-lock.visible {
+    opacity: 1;
+}
+
+.portrait-lock-top {
+    display: flex;
+    align-items: flex-start;
+}
+
+.portrait-lock-mid {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+.portrait-lock-bottom {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+.portrait-lock-logo {
+    height: 200px;
+    width: auto;
+    opacity: 0.8;
+}
+
+.portrait-lock-heading {
+    font-family: var(--font-main);
+    font-weight: 300;
+    font-size: 1.4rem;
+    letter-spacing: 0.12em;
+    color: var(--text);
+    opacity: 0.85;
+}
+
+.portrait-lock h2 {
+    font-family: var(--font-main);
+    font-weight: 300;
+    font-size: 1.1rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text);
+    opacity: 0.7;
+}
+
+.portrait-lock p {
+    font-family: var(--font-main);
+    font-weight: 300;
+    font-size: 0.75rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text);
+    opacity: 0.35;
+}
+
+/* Tap phone animation (Android) */
+.tap-phone-wrap {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.tap-phone-ripple {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 1px solid var(--accent);
+    opacity: 0;
+    animation: tapRipple 3.5s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+}
+
+.tap-phone-ripple:nth-child(2) {
+    animation-delay: 0.9s;
+}
+
+.tap-phone-ripple:nth-child(3) {
+    animation-delay: 1.8s;
+}
+
+@keyframes tapRipple {
+    0% { transform: scale(0.6); opacity: 0.35; }
+    100% { transform: scale(2.2); opacity: 0; }
+}
+
+.tap-phone-frame {
+    position: relative;
+    z-index: 2;
+    width: 44px;
+    height: 88px;
+    border: 1.5px solid var(--text);
+    border-radius: 12px;
+    background: var(--bg);
+    display: flex;
+    justify-content: center;
+    opacity: 0.4;
+    box-shadow: inset 0 0 0 2px var(--bg);
+}
+
+.tap-phone-frame::before {
+    content: '';
+    position: absolute;
+    top: 5px;
+    width: 14px;
+    height: 2px;
+    background: var(--text);
+    border-radius: 4px;
+    opacity: 0.5;
+}
+
+/* Tilt hint (iOS) */
+.tilt-hint {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.8rem;
+}
+
+.tilt-hint-phone {
+    position: relative;
+    width: 56px;
+    height: 112px;
+}
+
+.tilt-hint-phone-body {
+    width: 100%;
+    height: 100%;
+    border-radius: 12px;
+    border: 1.5px solid var(--text);
+    opacity: 0.4;
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 3px;
+    animation: tilt-spatial 4s cubic-bezier(0.16, 1, 0.3, 1) infinite alternate;
+}
+
+.tilt-hint-phone-body .notch {
+    width: 16px;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--text);
+    opacity: 0.3;
+}
+
+.tilt-hint-phone-body .crosshair {
+    width: 10px;
+    height: 10px;
+    position: relative;
+    opacity: 0.3;
+}
+
+.tilt-hint-phone-body .crosshair::before,
+.tilt-hint-phone-body .crosshair::after {
+    content: '';
+    position: absolute;
+    background: var(--text);
+}
+
+.tilt-hint-phone-body .crosshair::before {
+    top: 50%;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    transform: translateY(-50%);
+}
+
+.tilt-hint-phone-body .crosshair::after {
+    left: 50%;
+    top: 0;
+    height: 100%;
+    width: 1px;
+    transform: translateX(-50%);
+}
+
+.tilt-hint-phone-body .home-bar {
+    width: 20px;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--text);
+    opacity: 0.3;
+}
+
+@keyframes tilt-spatial {
+    0% { transform: perspective(600px) rotateY(-28deg) rotateX(12deg) rotateZ(-2deg); }
+    100% { transform: perspective(600px) rotateY(28deg) rotateX(-12deg) rotateZ(2deg); }
+}
+
+.is-ios .tilt-hint {
+    display: flex;
+}
+
+.is-ios .tap-phone-wrap {
+    display: none;
+}
+
+/* In-app browsers (Instagram, etc.) — show tilt hint instead of tap for Android too
+   since fullscreen/auto-rotate isn't available */
+.no-fullscreen .tilt-hint {
+    display: flex;
+}
+
+.no-fullscreen .tap-phone-wrap {
+    display: none;
+}
+
+/* Show only on mobile portrait */
+@media (max-width: 900px) and (orientation: portrait) {
+    .portrait-lock {
+        display: flex;
+    }
+}
+
+/* ── Touch Controls ── */
+.touch-controls {
+    display: none;
+    position: fixed;
+    bottom: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 15;
+    pointer-events: none;
+}
+
+.touch-left, .touch-right {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    gap: 0.5rem;
+    pointer-events: none;
+}
+
+.touch-left { left: 2rem; gap: 1rem; }
+.touch-right { right: 2rem; flex-direction: column; gap: 0.5rem; }
+
+@keyframes btn-pulse {
+    0%, 100% { border-color: rgba(18, 18, 18, 0.15); }
+    50% { border-color: rgba(18, 18, 18, 0.35); }
+}
+
+.touch-btn {
+    pointer-events: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(18, 18, 18, 0.15);
+    background: rgba(18, 18, 18, 0.04);
+    color: var(--text);
+    font-family: var(--font-main);
+    font-size: 0.6rem;
+    font-weight: 300;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: none;
+    transition: background 0.1s, border-color 0.1s;
+    animation: btn-pulse 2.5s ease-in-out infinite;
+}
+
+.touch-btn.active {
+    animation: none;
+    background: rgba(18, 18, 18, 0.12);
+    border-color: rgba(18, 18, 18, 0.3);
+}
+
+.touch-steer {
+    width: 72px;
+    height: 72px;
+    border-radius: 4px;
+}
+
+.touch-steer .arrow {
+    font-size: 1.4rem;
+    opacity: 0.4;
+}
+
+.touch-gas, .touch-brake {
+    width: 110px;
+    height: 64px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+}
+
+.touch-hb {
+    display: none;
+}
+
+/* Touch device landscape — JS toggles .touch-controls display via is-touch class,
+   but this media query handles the rest of the mobile landscape UI */
+@media (max-width: 900px) and (orientation: landscape) {
+    .touch-controls { display: block; }
+    .controls-hint { display: none; }
+    .controls-hint-mobile { display: block; font-size: 0.55rem; opacity: 0.7; }
+    .logo { height: 100px; }
+    .ui-layer { padding: 0.2rem 1.5rem 0.8rem; }
+    .status-footer { font-size: 0.7rem; padding-top: 0.6rem; }
+    .status-text { font-size: 0.65rem; }
+    .speed-indicator { font-size: 0.7rem; }
+
+    /* Contact overlay mobile fit */
+    .contact-reveal { position: fixed; top: 0; left: 0; transform: scale(0.95); }
+    .contact-reveal.active { transform: scale(1); }
+    .contact-close { top: 1.5rem; right: 1.8rem; font-size: 0.65rem; z-index: 5; }
+    .contact-content { width: 90%; }
+    .contact-title { font-size: clamp(2rem, 6vw, 3.5rem); margin-bottom: 0.8rem; }
+    .contact-body { font-size: 0.8rem; margin-bottom: 1.5rem; line-height: 1.4; }
+    .contact-links { flex-direction: row; gap: 1rem; padding-top: 1rem; }
+    .link-group h4 { font-size: 0.6rem; margin-bottom: 0.3rem; }
+    .link-group a { font-size: 0.75rem; }
+}
+
+/* Wider phones (> 900px CSS width) still need touch UI in landscape */
+.is-touch .controls-hint { display: none; }
+.is-touch .controls-hint-mobile { display: block; }
+
+@media (orientation: landscape) {
+    .is-touch .logo { height: 100px; }
+    .is-touch .ui-layer { padding: 0.2rem 1.5rem 0.8rem; }
+    .is-touch .status-footer { font-size: 0.7rem; padding-top: 0.6rem; }
+    .is-touch .status-text { font-size: 0.65rem; }
+    .is-touch .speed-indicator { font-size: 0.7rem; }
+    .is-touch .controls-hint-mobile { font-size: 0.55rem; opacity: 0.7; }
+
+    .is-touch .contact-reveal { position: fixed; top: 0; left: 0; transform: scale(0.95); }
+    .is-touch .contact-reveal.active { transform: scale(1); }
+    .is-touch .contact-close { top: 1.5rem; right: 1.8rem; font-size: 0.65rem; z-index: 5; }
+    .is-touch .contact-content { width: 90%; }
+    .is-touch .contact-title { font-size: clamp(2rem, 6vw, 3.5rem); margin-bottom: 0.8rem; }
+    .is-touch .contact-body { font-size: 0.8rem; margin-bottom: 1.5rem; line-height: 1.4; }
+    .is-touch .contact-links { flex-direction: row; gap: 1rem; padding-top: 1rem; }
+    .is-touch .link-group h4 { font-size: 0.6rem; margin-bottom: 0.3rem; }
+    .is-touch .link-group a { font-size: 0.75rem; }
+}
