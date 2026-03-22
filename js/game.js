@@ -17,6 +17,8 @@
     var contactCooldown = 0;
     var lastTime = 0;
     var gameTime = 0;
+    var physicsAccum = 0;
+    var PHYSICS_STEP = 16.667;
 
     /* ── Palette ── */
     var PALETTE = cfg.palette;
@@ -518,12 +520,15 @@
     /* ── Loop ── */
     function loop(timestamp) {
         if (!lastTime) lastTime = timestamp;
-        var elapsed = timestamp - lastTime;
+        var frameTime = Math.min(timestamp - lastTime, 50);
         lastTime = timestamp;
-        var dt = Math.min(elapsed / 16.667, 3);
 
         if (!ui.isPortraitLocked()) {
-            updatePhysics(dt, elapsed);
+            physicsAccum += frameTime;
+            while (physicsAccum >= PHYSICS_STEP) {
+                updatePhysics(1.0, PHYSICS_STEP);
+                physicsAccum -= PHYSICS_STEP;
+            }
             draw();
         }
         requestAnimationFrame(loop);
