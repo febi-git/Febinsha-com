@@ -240,6 +240,9 @@
         if (isGas) {
             car.velocity.x += fwdX * car.accel;
             car.velocity.y += fwdY * car.accel;
+            /* Subtle auto-drift weave while accelerating */
+            var weave = Math.sin(frameCount * 0.02) * car.turnSpeed * 0.3;
+            car.angle += weave;
         }
         if (isBrake) {
             car.velocity.x -= fwdX * car.accel * 0.4;
