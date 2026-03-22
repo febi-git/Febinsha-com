@@ -102,9 +102,20 @@
             requestFullAndLandscape();
         }
     }
-    if (!isIOS) {
-        portraitLock.addEventListener('click', onFirstTouch);
+
+    function dismissPortraitLock() {
+        if (!canFullscreen && isTouchDevice) {
+            /* In-app browsers (Instagram, etc.) — dismiss lock on tap so user can play */
+            isPortraitLocked = false;
+            portraitLock.classList.remove('visible');
+            setTimeout(function () { portraitLock.style.display = 'none'; }, 400);
+            if (touchControls) touchControls.style.display = 'block';
+        } else {
+            onFirstTouch();
+        }
     }
+
+    portraitLock.addEventListener('click', dismissPortraitLock);
     canvas.addEventListener('touchstart', onFirstTouch, { once: true, passive: true });
 
     var touchControls = document.getElementById('touchControls');

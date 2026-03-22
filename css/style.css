@@ -141,11 +141,7 @@ body, html {
     background: none;
     color: inherit;
     font-family: inherit;
-    min-width: 44px;
-    min-height: 44px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    padding: 0.5rem;
 }
 
 .contact-close:hover { opacity: 0.6; }
