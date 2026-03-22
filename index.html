@@ -423,8 +423,8 @@
         }
 
         .touch-gas, .touch-brake {
-            width: 70px;
-            height: 44px;
+            width: 64px;
+            height: 64px;
             border-radius: 4px;
         }
 
@@ -437,10 +437,10 @@
             .controls-hint { display: none; }
             .controls-hint-mobile { display: block; font-size: 0.55rem; opacity: 0.25; }
             .logo { height: 100px; }
-            .ui-layer { padding: 0.2rem 1rem 0.4rem; }
-            .status-footer { font-size: 0.55rem; padding-top: 0.4rem; }
-            .status-text { font-size: 0.55rem; }
-            .speed-indicator { font-size: 0.55rem; }
+            .ui-layer { padding: 0.2rem 1.5rem 0.8rem; }
+            .status-footer { font-size: 0.7rem; padding-top: 0.6rem; }
+            .status-text { font-size: 0.65rem; }
+            .speed-indicator { font-size: 0.7rem; }
 
             /* Contact overlay mobile fit */
             .contact-reveal { position: fixed; top: 0; left: 0; transform: scale(0.95); }
@@ -729,8 +729,8 @@
 
         /* ── Mobile tuning ── */
         if (isTouchDevice) {
-            car.accel = 0.35;
-            car.maxSpeed = 8;
+            car.accel = 0.25;
+            car.maxSpeed = 6;
             car.turnSpeed = 0.07;
         }
 
