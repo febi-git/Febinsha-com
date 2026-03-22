@@ -362,6 +362,43 @@
             100% { opacity: 0; transform: translate(-50%, -50%) scale(1.5); }
         }
 
+        /* Tilt arrow icon (iOS) */
+        .tilt-arrow-icon {
+            display: none;
+            width: 48px;
+            height: 48px;
+            position: relative;
+        }
+
+        .tilt-arrow-icon svg {
+            width: 100%;
+            height: 100%;
+            fill: none;
+            stroke: var(--text);
+            stroke-width: 1.5;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            opacity: 0.35;
+            animation: arrowRotate 2.5s ease-in-out infinite;
+            transform-origin: center center;
+        }
+
+        @keyframes arrowRotate {
+            0%, 100% { transform: rotate(0deg); opacity: 0.35; }
+            20% { opacity: 0.5; }
+            40% { transform: rotate(90deg); opacity: 0.5; }
+            65% { transform: rotate(90deg); opacity: 0.35; }
+            85% { transform: rotate(0deg); opacity: 0.35; }
+        }
+
+        .is-ios .tilt-arrow-icon {
+            display: block;
+        }
+
+        .is-ios .tap-hand {
+            display: none;
+        }
+
         /* Show only on mobile portrait */
         @media (max-width: 900px) and (orientation: portrait) {
             .portrait-lock {
@@ -536,7 +573,7 @@
             <img src="Brand-Assets/logo.png" class="portrait-lock-logo" alt="Feb.">
         </div>
         <div class="portrait-lock-mid">
-            <div class="tap-hand">
+            <div class="tap-hand" id="tapHand">
                 <svg viewBox="0 0 24 24">
                     <path d="M8 13V5.5a1.5 1.5 0 0 1 3 0V12"/>
                     <path d="M11 11.5a1.5 1.5 0 0 1 3 0V12"/>
@@ -545,7 +582,13 @@
                 </svg>
                 <div class="tap-hand-ripple"></div>
             </div>
-            <p>Tap to drift</p>
+            <div class="tilt-arrow-icon" id="tiltArrow">
+                <svg viewBox="0 0 24 24">
+                    <path d="M 4 12 A 8 8 0 1 1 12 20"/>
+                    <polyline points="4 8 4 12 8 12"/>
+                </svg>
+            </div>
+            <p id="lockText">Tap to drift</p>
         </div>
         <div class="portrait-lock-bottom">
             <div class="portrait-lock-heading">febinsha.com</div>
@@ -562,6 +605,13 @@
         const closeContactBtn = document.getElementById('closeContact');
         const portraitLock = document.getElementById('portraitLock');
         const isTouchDevice = 'ontouchstart' in window;
+        const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent) ||
+                      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+        if (isIOS) {
+            document.body.classList.add('is-ios');
+            document.getElementById('lockText').textContent = 'Tilt to drift';
+        }
 
         /* ── Portrait lock (mobile) ── */
         let isPortraitLocked = false;
@@ -585,7 +635,9 @@
                 requestFullAndLandscape();
             }
         }
-        portraitLock.addEventListener('click', onFirstTouch);
+        if (!isIOS) {
+            portraitLock.addEventListener('click', onFirstTouch);
+        }
         canvas.addEventListener('touchstart', onFirstTouch, { once: true, passive: true });
 
         function checkOrientation() {
