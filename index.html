@@ -467,7 +467,7 @@
 <span class="key">↓</span> <span class="key">S</span><span class="label">BRAKE</span>
 <span class="key">←</span> <span class="key">→</span> <span class="key">A</span> <span class="key">D</span><span class="label">STEER</span>
 <span class="key">SPACE</span><span class="label">HANDBRAKE</span></div>
-            <div class="controls-hint-mobile">Use on-screen buttons to drive</div>
+            <div class="controls-hint-mobile">Use on-screen buttons to drift</div>
         </div>
         <div class="status-footer">
             <div class="status-text">Find the <span style="color: #e06030;">orange</span> node if you can't wait, or drift</div>
@@ -729,8 +729,8 @@
 
         /* ── Mobile tuning ── */
         if (isTouchDevice) {
-            car.accel = 0.25;
-            car.maxSpeed = 7;
+            car.accel = 0.3;
+            car.maxSpeed = 8;
             car.turnSpeed = 0.07;
         }
 
