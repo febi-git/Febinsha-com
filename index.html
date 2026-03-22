@@ -571,25 +571,18 @@
             }
         }
 
-        /* Dismiss portrait lock — always let user through */
-        function dismissPortraitLock() {
-            isPortraitLocked = false;
-            portraitLockDismissed = true;
-            portraitLock.classList.remove('visible');
-            setTimeout(() => { portraitLock.style.display = 'none'; }, 400);
-            /* Try fullscreen + landscape on supported devices (Android) */
-            requestFullAndLandscape();
+        /* Any user tap on mobile triggers fullscreen + landscape lock */
+        function onFirstTouch() {
+            if (isTouchDevice && !document.fullscreenElement) {
+                requestFullAndLandscape();
+            }
         }
-
-        let portraitLockDismissed = false;
-        portraitLock.addEventListener('click', dismissPortraitLock);
+        portraitLock.addEventListener('click', onFirstTouch);
+        canvas.addEventListener('touchstart', onFirstTouch, { once: true, passive: true });
 
         function checkOrientation() {
             const isMobile = window.innerWidth <= 900 || isTouchDevice;
             const isPortrait = window.innerHeight > window.innerWidth;
-
-            /* Once user taps to dismiss, don't show the lock again */
-            if (portraitLockDismissed) return;
 
             if (isMobile && isPortrait) {
                 if (!isPortraitLocked) {
@@ -764,7 +757,7 @@
         const envText = [
             { text: "FEBINSHA.COM",             x: 0,    y: -80 * mobileScale,  size: 180 * mobileScale, weight: 100, align: "center", tracking: 8 * mobileScale },
             { text: "SITE UNDER CONSTRUCTION", x: 0,    y: 60 * mobileScale,   size: 32 * mobileScale,  weight: 300, align: "center", tracking: 4 * mobileScale },
-            { text: "While you wait, drift around.",  x: 0,    y: 250 * mobileScale,  size: 14 * mobileScale,  weight: 400, align: "center", tracking: 2, color: '#c9553a' }
+            { text: "While you wait, drift around.",  x: 0,    y: 250 * mobileScale,  size: isTouchDevice ? 12 : 14,  weight: 400, align: "center", tracking: 2, color: '#c9553a' }
         ];
 
         const envLines = [
@@ -842,15 +835,16 @@
             const fwdBias = 0.6;
             const fwdX = Math.cos(car.angle);
             const fwdY = Math.sin(car.angle);
-            const minConeDist = 120;
+            const minConeDist = isTouchDevice ? 80 : 120;
             do {
                 const a = Math.random() * Math.PI * 2;
-                const d = 250 + Math.random() * 500;
+                const d = isTouchDevice ? (150 + Math.random() * 300) : (250 + Math.random() * 500);
                 ox = car.x + Math.cos(a) * d + fwdX * d * fwdBias;
                 oy = car.y + Math.sin(a) * d + fwdY * d * fwdBias;
                 tries++;
                 const tooClose = obstacles.some(o => Math.hypot(o.x - ox, o.y - oy) < minConeDist);
-                if (Math.hypot(car.x - ox, car.y - oy) >= 150 && !tooClose) break;
+                const inLandingZone = isTouchDevice && Math.hypot(ox, oy - 150) < 300;
+                if (Math.hypot(car.x - ox, car.y - oy) >= (isTouchDevice ? 100 : 150) && !tooClose && !inLandingZone) break;
             } while (tries < 30);
 
             obstacles.push({ x: ox, y: oy, radius: 3 * PIXEL_SCALE });
@@ -858,13 +852,13 @@
 
         /* Remove far-away cones and keep a healthy count near the car */
         function cullAndSpawnCones() {
-            const cullDist = 1200;
+            const cullDist = isTouchDevice ? 500 : 1200;
             for (let i = obstacles.length - 1; i >= 0; i--) {
                 if (Math.hypot(car.x - obstacles[i].x, car.y - obstacles[i].y) > cullDist) {
                     obstacles.splice(i, 1);
                 }
             }
-            const target = 10;
+            const target = isTouchDevice ? 12 : 10;
             while (obstacles.length < target) {
                 spawnObstacle();
             }
