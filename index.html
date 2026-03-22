@@ -445,7 +445,7 @@
             /* Contact overlay mobile fit */
             .contact-reveal { position: fixed; top: 0; left: 0; transform: scale(0.95); }
             .contact-reveal.active { transform: scale(1); }
-            .contact-close { top: 0.8rem; right: 1rem; font-size: 0.65rem; z-index: 5; }
+            .contact-close { top: 1.5rem; right: 1.8rem; font-size: 0.65rem; z-index: 5; }
             .contact-content { width: 90%; }
             .contact-title { font-size: clamp(2rem, 6vw, 3.5rem); margin-bottom: 0.8rem; }
             .contact-body { font-size: 0.8rem; margin-bottom: 1.5rem; line-height: 1.4; }
@@ -730,7 +730,7 @@
         /* ── Mobile tuning ── */
         if (isTouchDevice) {
             car.accel = 0.25;
-            car.maxSpeed = 6;
+            car.maxSpeed = 7;
             car.turnSpeed = 0.07;
         }
 
@@ -782,7 +782,13 @@
         /* ── Touch controls ── */
         function bindTouch(btnId, keyName) {
             const btn = document.getElementById(btnId);
-            const press = (e) => { e.preventDefault(); keys[keyName] = true; btn.classList.add('active'); };
+            const press = (e) => {
+                e.preventDefault();
+                keys[keyName] = true;
+                btn.classList.add('active');
+                /* Auto-fullscreen on first touch control press */
+                if (!document.fullscreenElement) requestFullAndLandscape();
+            };
             const release = (e) => { e.preventDefault(); keys[keyName] = false; btn.classList.remove('active'); };
             btn.addEventListener('touchstart', press, { passive: false });
             btn.addEventListener('touchend', release, { passive: false });
@@ -1177,6 +1183,10 @@
             isContactOpen = false;
             contactOverlay.classList.remove('active');
             contactCooldown = 120;
+            /* Re-enter fullscreen on mobile after closing contact */
+            if (isTouchDevice && !document.fullscreenElement) {
+                requestFullAndLandscape();
+            }
             /* Reset car to starting position */
             car.x = 0;
             car.y = 150;
