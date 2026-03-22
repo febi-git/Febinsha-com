@@ -217,7 +217,7 @@
                 obstacles.splice(i, 1);
             }
         }
-        var target = ui.isTouchDevice ? 10 : 11;
+        var target = ui.isTouchDevice ? 9 : 11;
         while (obstacles.length < target) {
             spawnObstacle();
         }
