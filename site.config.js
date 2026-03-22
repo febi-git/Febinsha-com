@@ -88,8 +88,8 @@ const SITE_CONFIG = {
         pixelScale: 4,
         worldTileSize: 4000,
         maxSkids: 1200,
-        crashDuration: 60,
-        contactCooldown: 120,
+        crashDuration: 1000,
+        contactCooldown: 2000,
         contactNode: { x: 700, y: -400, radius: 60 },
         car: {
             desktop: { accel: 0.35, maxSpeed: 8, turnSpeed: 0.06 },

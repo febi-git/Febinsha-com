@@ -127,8 +127,12 @@
                 portraitLock.classList.remove('visible');
                 setTimeout(function () { portraitLock.style.display = 'none'; }, 400);
             }
-            /* Show touch controls in landscape for any touch device */
-            if (isTouchDevice) touchControls.style.display = 'block';
+            /* Show touch controls only on small-screen touch devices in landscape */
+            if (isTouchDevice && window.innerWidth <= 900) {
+                touchControls.style.display = 'block';
+            } else {
+                touchControls.style.display = '';
+            }
         }
     }
 

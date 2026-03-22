@@ -15,6 +15,8 @@
     var frameCount = 0;
     var crashTimer = 0;
     var contactCooldown = 0;
+    var lastTime = 0;
+    var gameTime = 0;
 
     /* ── Palette ── */
     var PALETTE = cfg.palette;
@@ -215,12 +217,14 @@
     }
 
     /* ── Physics ── */
-    function updatePhysics() {
+    function updatePhysics(dt, elapsed) {
         if (ui.isContactOpen) return;
 
+        gameTime += elapsed;
+
         if (crashTimer > 0) {
-            crashTimer--;
-            if (crashTimer === 0) respawn();
+            crashTimer -= elapsed;
+            if (crashTimer <= 0) { crashTimer = 0; respawn(); }
             return;
         }
 
@@ -231,22 +235,22 @@
         var isBrake = keys.ArrowDown  || keys.s;
         var isHandbrake = keys[' '];
 
-        if (isLeft)  car.angle -= car.turnSpeed;
-        if (isRight) car.angle += car.turnSpeed;
+        if (isLeft)  car.angle -= car.turnSpeed * dt;
+        if (isRight) car.angle += car.turnSpeed * dt;
 
         var fwdX = Math.cos(car.angle);
         var fwdY = Math.sin(car.angle);
 
         if (isGas) {
-            car.velocity.x += fwdX * car.accel;
-            car.velocity.y += fwdY * car.accel;
+            car.velocity.x += fwdX * car.accel * dt;
+            car.velocity.y += fwdY * car.accel * dt;
             /* Subtle auto-drift weave while accelerating */
-            var weave = Math.sin(frameCount * 0.02) * car.turnSpeed * 0.3;
+            var weave = Math.sin(gameTime * 0.0012) * car.turnSpeed * 0.3 * dt;
             car.angle += weave;
         }
         if (isBrake) {
-            car.velocity.x -= fwdX * car.accel * 0.4;
-            car.velocity.y -= fwdY * car.accel * 0.4;
+            car.velocity.x -= fwdX * car.accel * 0.4 * dt;
+            car.velocity.y -= fwdY * car.accel * 0.4 * dt;
         }
 
         var speed = Math.hypot(car.velocity.x, car.velocity.y);
@@ -269,7 +273,7 @@
 
             var slip = Math.abs(fwdX * vny - fwdY * vnx);
             if (slip > 0.3 && speed > 3) {
-                var driftDrag = 0.97;
+                var driftDrag = Math.pow(0.97, dt);
                 car.velocity.x *= driftDrag;
                 car.velocity.y *= driftDrag;
                 var rd = CAR_SPR_H * 0.4;
@@ -307,18 +311,19 @@
 
         /* Friction */
         var fr = isHandbrake ? 0.94 : (isBrake ? 0.92 : car.friction);
+        var frDt = Math.pow(fr, dt);
 
         if (isHandbrake && speed > 2) {
             car.driftFactor = carCfg.handbrakeGrip;
         } else {
             car.driftFactor = carCfg.driftFactor;
         }
-        car.velocity.x *= fr;
-        car.velocity.y *= fr;
+        car.velocity.x *= frDt;
+        car.velocity.y *= frDt;
 
         /* Move */
-        car.x += car.velocity.x;
-        car.y += car.velocity.y;
+        car.x += car.velocity.x * dt;
+        car.y += car.velocity.y * dt;
 
         /* HUD */
         ui.speedDisplay.innerText = Math.round(speed * 8) + ' km/h';
@@ -338,21 +343,22 @@
         }
 
         /* Contact node */
-        contactNode.pulse += 0.05;
-        if (contactCooldown > 0) contactCooldown--;
+        contactNode.pulse += 0.05 * dt;
+        if (contactCooldown > 0) contactCooldown -= elapsed;
         var cnWrapX = contactNode.x + Math.round((car.x - contactNode.x) / W) * W;
         var cnWrapY = contactNode.y + Math.round((car.y - contactNode.y) / W) * W;
-        if (Math.hypot(car.x - cnWrapX, car.y - cnWrapY) < contactNode.radius + 15 && !ui.isContactOpen && contactCooldown === 0) {
+        if (Math.hypot(car.x - cnWrapX, car.y - cnWrapY) < contactNode.radius + 15 && !ui.isContactOpen && contactCooldown <= 0) {
             ui.openContact();
         }
 
         /* Camera lerp */
-        camera.x += (car.x - width / 2 - camera.x) * 0.1;
-        camera.y += (car.y - height / 2 - camera.y) * 0.1;
+        var camSmooth = 1 - Math.pow(0.9, dt);
+        camera.x += (car.x - width / 2 - camera.x) * camSmooth;
+        camera.y += (car.y - height / 2 - camera.y) * camSmooth;
 
         /* Skid decay */
         for (var j = skidMarks.length - 1; j >= 0; j--) {
-            skidMarks[j].life -= 0.003;
+            skidMarks[j].life -= 0.003 * dt;
             if (skidMarks[j].life <= 0) skidMarks.splice(j, 1);
         }
     }
@@ -486,7 +492,7 @@
         ctx.restore();
 
         /* F40 sprite (blink during crash) */
-        if (crashTimer === 0 || frameCount % 10 < 5) {
+        if (crashTimer <= 0 || frameCount % 10 < 5) {
             ctx.save();
             ctx.translate(car.x, car.y);
             ctx.rotate(car.angle + Math.PI / 2);
@@ -510,9 +516,14 @@
     }
 
     /* ── Loop ── */
-    function loop() {
+    function loop(timestamp) {
+        if (!lastTime) lastTime = timestamp;
+        var elapsed = timestamp - lastTime;
+        lastTime = timestamp;
+        var dt = Math.min(elapsed / 16.667, 3);
+
         if (!ui.isPortraitLocked()) {
-            updatePhysics();
+            updatePhysics(dt, elapsed);
             draw();
         }
         requestAnimationFrame(loop);
@@ -544,5 +555,5 @@
     for (var i = 0; i < 4; i++) spawnObstacle();
 
     ui.checkOrientation();
-    document.fonts.ready.then(function () { loop(); });
+    document.fonts.ready.then(function () { requestAnimationFrame(loop); });
 })();
