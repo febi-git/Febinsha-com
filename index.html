@@ -63,7 +63,7 @@
             font-weight: 300;
             letter-spacing: 0.25em;
             text-transform: uppercase;
-            opacity: 0.5;
+            opacity: 0.8;
             color: var(--text);
             line-height: 1.9;
             text-align: right;
@@ -81,7 +81,7 @@
         .controls-hint .label {
             letter-spacing: 0.25em;
             margin-left: 0.6em;
-            opacity: 0.7;
+            opacity: 0.85;
         }
 
         .controls-hint-mobile {
@@ -90,7 +90,7 @@
             font-weight: 300;
             letter-spacing: 0.2em;
             text-transform: uppercase;
-            opacity: 0.3;
+            opacity: 0.7;
         }
 
         @media (max-width: 640px) {
@@ -155,7 +155,7 @@
 
         .contact-content {
             text-align: center;
-            width: 80%; max-width: 800px;
+            width: 90%; max-width: 900px;
         }
 
         .contact-title {
@@ -190,12 +190,12 @@
         }
 
         .contact-links {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 2rem;
+            display: flex;
+            justify-content: space-between;
             border-top: 1px solid rgba(255,255,255,0.3);
             padding-top: 2rem;
             text-align: left;
+            width: 100%;
         }
 
         .link-group h4 {
@@ -230,7 +230,7 @@
         }
 
         @media (max-width: 640px) {
-            .contact-links { grid-template-columns: 1fr; gap: 1.5rem; }
+            .contact-links { flex-direction: column; gap: 1.5rem; }
             .ui-layer { padding: 1.5rem; }
             .logo { height: 120px; }
         }
@@ -391,6 +391,11 @@
         .touch-left { left: 2rem; gap: 1rem; }
         .touch-right { right: 2rem; flex-direction: column; gap: 0.5rem; }
 
+        @keyframes btn-pulse {
+            0%, 100% { border-color: rgba(18, 18, 18, 0.15); }
+            50% { border-color: rgba(18, 18, 18, 0.35); }
+        }
+
         .touch-btn {
             pointer-events: auto;
             display: flex;
@@ -407,28 +412,31 @@
             -webkit-tap-highlight-color: transparent;
             touch-action: none;
             transition: background 0.1s, border-color 0.1s;
+            animation: btn-pulse 2.5s ease-in-out infinite;
         }
 
         .touch-btn.active {
+            animation: none;
             background: rgba(18, 18, 18, 0.12);
             border-color: rgba(18, 18, 18, 0.3);
         }
 
         .touch-steer {
-            width: 64px;
-            height: 64px;
+            width: 72px;
+            height: 72px;
             border-radius: 4px;
         }
 
         .touch-steer .arrow {
-            font-size: 1.3rem;
+            font-size: 1.4rem;
             opacity: 0.4;
         }
 
         .touch-gas, .touch-brake {
-            width: 64px;
-            height: 64px;
+            width: 80px;
+            height: 48px;
             border-radius: 4px;
+            font-size: 0.65rem;
         }
 
         .touch-hb {
@@ -438,7 +446,7 @@
         @media (max-width: 900px) and (orientation: landscape) {
             .touch-controls { display: block; }
             .controls-hint { display: none; }
-            .controls-hint-mobile { display: block; font-size: 0.55rem; opacity: 0.25; }
+            .controls-hint-mobile { display: block; font-size: 0.55rem; opacity: 0.7; }
             .logo { height: 100px; }
             .ui-layer { padding: 0.2rem 1.5rem 0.8rem; }
             .status-footer { font-size: 0.7rem; padding-top: 0.6rem; }
@@ -452,7 +460,7 @@
             .contact-content { width: 90%; }
             .contact-title { font-size: clamp(2rem, 6vw, 3.5rem); margin-bottom: 0.8rem; }
             .contact-body { font-size: 0.8rem; margin-bottom: 1.5rem; line-height: 1.4; }
-            .contact-links { grid-template-columns: repeat(3, 1fr); gap: 1rem; padding-top: 1rem; }
+            .contact-links { flex-direction: row; gap: 1rem; padding-top: 1rem; }
             .link-group h4 { font-size: 0.6rem; margin-bottom: 0.3rem; }
             .link-group a { font-size: 0.75rem; }
         }
@@ -858,7 +866,7 @@
                     obstacles.splice(i, 1);
                 }
             }
-            const target = isTouchDevice ? 12 : 10;
+            const target = isTouchDevice ? 11 : 10;
             while (obstacles.length < target) {
                 spawnObstacle();
             }
