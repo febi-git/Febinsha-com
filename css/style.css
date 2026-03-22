@@ -544,7 +544,7 @@ body, html {
 /* Touch device landscape — JS toggles .touch-controls display via is-touch class,
    but this media query handles the rest of the mobile landscape UI */
 @media (max-width: 900px) and (orientation: landscape) {
-    .touch-controls { display: block; }
+    .is-touch .touch-controls { display: block; }
     .controls-hint { display: none; }
     .controls-hint-mobile { display: block; font-size: 0.55rem; opacity: 0.7; }
     .logo { height: 100px; }

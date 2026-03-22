@@ -92,7 +92,7 @@ const SITE_CONFIG = {
         contactCooldown: 120,
         contactNode: { x: 700, y: -400, radius: 60 },
         car: {
-            desktop: { accel: 0.6, maxSpeed: 13, turnSpeed: 0.08 },
+            desktop: { accel: 0.35, maxSpeed: 8, turnSpeed: 0.06 },
             mobile:  { accel: 0.3, maxSpeed: 8,  turnSpeed: 0.07 },
             friction: 0.96,
             driftFactor: 0.90,
