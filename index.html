@@ -46,7 +46,7 @@
     <!-- UI overlay -->
     <div class="ui-layer">
         <div class="header-bar">
-            <img class="logo" alt="Feb.">
+            <img class="logo" alt="Febinsha logo">
             <div class="controls-hint"><span class="key">↑</span> <span class="key">W</span><span class="label">THROTTLE</span>
 <span class="key">↓</span> <span class="key">S</span><span class="label">BRAKE</span>
 <span class="key">←</span> <span class="key">→</span> <span class="key">A</span> <span class="key">D</span><span class="label">STEER</span>
@@ -62,13 +62,13 @@
     <!-- Touch controls (mobile landscape) -->
     <div class="touch-controls" id="touchControls">
         <div class="touch-left">
-            <div class="touch-btn touch-steer" id="btnLeft"><span class="arrow">&#9664;</span></div>
-            <div class="touch-btn touch-steer" id="btnRight"><span class="arrow">&#9654;</span></div>
+            <button type="button" class="touch-btn touch-steer" id="btnLeft" aria-label="Steer left"><span class="arrow">&#9664;</span></button>
+            <button type="button" class="touch-btn touch-steer" id="btnRight" aria-label="Steer right"><span class="arrow">&#9654;</span></button>
         </div>
         <div class="touch-right">
-            <div class="touch-btn touch-gas" id="btnGas">Gas</div>
-            <div class="touch-btn touch-brake" id="btnBrake">Brake</div>
-            <div class="touch-btn touch-hb" id="btnHB">HB</div>
+            <button type="button" class="touch-btn touch-gas" id="btnGas" aria-label="Gas">Gas</button>
+            <button type="button" class="touch-btn touch-brake" id="btnBrake" aria-label="Brake">Brake</button>
+            <button type="button" class="touch-btn touch-hb" id="btnHB" aria-label="Handbrake">HB</button>
         </div>
     </div>
 
@@ -76,7 +76,7 @@
 
     <!-- Contact overlay (content populated by ui.js from config) -->
     <div class="contact-reveal" id="contactOverlay">
-        <div class="contact-close" id="closeContact">Close &#10005;</div>
+        <button type="button" class="contact-close" id="closeContact" aria-label="Close contact">Close &#10005;</button>
         <div class="contact-content">
             <h1 class="contact-title" id="contactTitle"></h1>
             <p class="contact-body" id="contactBody"></p>
@@ -87,7 +87,7 @@
     <!-- Portrait lock overlay (mobile only) -->
     <div class="portrait-lock" id="portraitLock">
         <div class="portrait-lock-top">
-            <img class="portrait-lock-logo" alt="Feb.">
+            <img class="portrait-lock-logo" alt="Febinsha logo">
         </div>
         <div class="portrait-lock-mid">
             <div class="tap-phone-wrap" id="tapHand">

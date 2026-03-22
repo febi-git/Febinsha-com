@@ -133,7 +133,9 @@
 
     /* ── World objects ── */
     var obstacles = [];
-    var skidMarks = [];
+    var skidMarks = new Array(MAX_SKIDS);
+    var skidHead = 0;
+    var skidCount = 0;
     var tireTrailCounter = 0;
 
     var contactNode = {
@@ -144,6 +146,7 @@
     };
 
     var nodeLogo = new Image();
+    nodeLogo.onerror = function () { nodeLogo.broken = true; };
     nodeLogo.src = SITE_CONFIG.brand.nodeLogoSvg;
 
     var mobileScale = ui.isTouchDevice ? 0.5 : 1;
@@ -181,7 +184,9 @@
         car.velocity = { x: 0, y: 0 };
         car.score = 0;
         obstacles = [];
-        skidMarks = [];
+        skidMarks = new Array(MAX_SKIDS);
+        skidHead = 0;
+        skidCount = 0;
         for (var i = 0; i < 4; i++) spawnObstacle();
     }
 
@@ -270,6 +275,7 @@
             var nx = vnx * car.driftFactor + fwdX * (1 - car.driftFactor);
             var ny = vny * car.driftFactor + fwdY * (1 - car.driftFactor);
             var len = Math.hypot(nx, ny);
+            if (len < 0.0001) len = 1;
             car.velocity.x = (nx / len) * speed;
             car.velocity.y = (ny / len) * speed;
 
@@ -285,11 +291,9 @@
                 var px = Math.cos(car.angle - Math.PI / 2);
                 var py = Math.sin(car.angle - Math.PI / 2);
 
-                skidMarks.push(
-                    { x: rx + px * wo, y: ry + py * wo, life: 1.0 },
-                    { x: rx - px * wo, y: ry - py * wo, life: 1.0 }
-                );
-                if (skidMarks.length > MAX_SKIDS) skidMarks.splice(0, 2);
+                skidMarks[skidHead % MAX_SKIDS] = { x: rx + px * wo, y: ry + py * wo, life: 1.0 }; skidHead++;
+                skidMarks[skidHead % MAX_SKIDS] = { x: rx - px * wo, y: ry - py * wo, life: 1.0 }; skidHead++;
+                if (skidCount < MAX_SKIDS) skidCount = Math.min(skidCount + 2, MAX_SKIDS);
                 car.score += slip * 0.5;
             }
 
@@ -302,11 +306,9 @@
                     var ry2 = car.y - fwdY * rd2;
                     var px2 = Math.cos(car.angle - Math.PI / 2);
                     var py2 = Math.sin(car.angle - Math.PI / 2);
-                    skidMarks.push(
-                        { x: rx2 + px2 * wo2, y: ry2 + py2 * wo2, life: 0.45, trail: true },
-                        { x: rx2 - px2 * wo2, y: ry2 - py2 * wo2, life: 0.45, trail: true }
-                    );
-                    if (skidMarks.length > MAX_SKIDS) skidMarks.splice(0, 2);
+                    skidMarks[skidHead % MAX_SKIDS] = { x: rx2 + px2 * wo2, y: ry2 + py2 * wo2, life: 0.45, trail: true }; skidHead++;
+                    skidMarks[skidHead % MAX_SKIDS] = { x: rx2 - px2 * wo2, y: ry2 - py2 * wo2, life: 0.45, trail: true }; skidHead++;
+                    if (skidCount < MAX_SKIDS) skidCount = Math.min(skidCount + 2, MAX_SKIDS);
                 }
             }
         }
@@ -315,11 +317,8 @@
         var fr = isHandbrake ? 0.94 : (isBrake ? 0.92 : car.friction);
         var frDt = Math.pow(fr, dt);
 
-        if (isHandbrake && speed > 2) {
-            car.driftFactor = carCfg.handbrakeGrip;
-        } else {
-            car.driftFactor = carCfg.driftFactor;
-        }
+        var targetDrift = (isHandbrake && speed > 2) ? carCfg.handbrakeGrip : carCfg.driftFactor;
+        car.driftFactor += (targetDrift - car.driftFactor) * 0.15;
         car.velocity.x *= frDt;
         car.velocity.y *= frDt;
 
@@ -333,10 +332,26 @@
         /* Cones */
         cullAndSpawnCones();
 
-        /* Collision */
+        /* Collision (swept-circle to prevent tunneling) */
+        var prevX = car.x - car.velocity.x * dt;
+        var prevY = car.y - car.velocity.y * dt;
         for (var i = 0; i < obstacles.length; i++) {
             var obs = obstacles[i];
-            if (Math.hypot(car.x - obs.x, car.y - obs.y) < car.width / 2 + obs.radius) {
+            var hitDist = car.width / 2 + obs.radius;
+            /* Closest point on movement segment to cone center */
+            var segX = car.x - prevX, segY = car.y - prevY;
+            var segLen2 = segX * segX + segY * segY;
+            var t = segLen2 > 0 ? Math.max(0, Math.min(1, ((obs.x - prevX) * segX + (obs.y - prevY) * segY) / segLen2)) : 0;
+            var closestX = prevX + t * segX;
+            var closestY = prevY + t * segY;
+            if (Math.hypot(closestX - obs.x, closestY - obs.y) < hitDist) {
+                /* Push car out along collision normal */
+                var cnx = car.x - obs.x, cny = car.y - obs.y;
+                var cnLen = Math.hypot(cnx, cny);
+                if (cnLen > 0.01) {
+                    car.x = obs.x + (cnx / cnLen) * (hitDist + 1);
+                    car.y = obs.y + (cny / cnLen) * (hitDist + 1);
+                }
                 car.velocity.x = 0;
                 car.velocity.y = 0;
                 crashTimer = cfg.crashDuration;
@@ -351,6 +366,7 @@
         var cnWrapY = contactNode.y + Math.round((car.y - contactNode.y) / W) * W;
         if (Math.hypot(car.x - cnWrapX, car.y - cnWrapY) < contactNode.radius + 15 && !ui.isContactOpen && contactCooldown <= 0) {
             ui.openContact();
+            contactCooldown = cfg.contactCooldown;
         }
 
         /* Camera lerp */
@@ -359,9 +375,10 @@
         camera.y += (car.y - height / 2 - camera.y) * camSmooth;
 
         /* Skid decay */
-        for (var j = skidMarks.length - 1; j >= 0; j--) {
+        for (var j = 0; j < MAX_SKIDS; j++) {
+            if (!skidMarks[j]) continue;
             skidMarks[j].life -= 0.003 * dt;
-            if (skidMarks[j].life <= 0) skidMarks.splice(j, 1);
+            if (skidMarks[j].life <= 0) skidMarks[j] = null;
         }
     }
 
@@ -458,7 +475,9 @@
         }
 
         /* Skid marks & tire trails */
-        skidMarks.forEach(function (s) {
+        for (var si = 0; si < MAX_SKIDS; si++) {
+            var s = skidMarks[si];
+            if (!s) continue;
             ctx.beginPath();
             if (s.trail) {
                 ctx.arc(s.x, s.y, 1.5, 0, Math.PI * 2);
@@ -468,7 +487,7 @@
                 ctx.fillStyle = 'rgba(18,18,18,' + (s.life * 0.8) + ')';
             }
             ctx.fill();
-        });
+        }
 
         /* Cones */
         for (var i = 0; i < obstacles.length; i++) {
@@ -514,7 +533,7 @@
             ctx.globalAlpha = 1;
         }
 
-        frameCount++;
+        frameCount = (frameCount + 1) % 1000;
     }
 
     /* ── Loop ── */
@@ -548,7 +567,9 @@
             car.velocity = { x: 0, y: 0 };
             camera.x = car.x - width / 2;
             camera.y = car.y - height / 2;
-            skidMarks = [];
+            skidMarks = new Array(MAX_SKIDS);
+            skidHead = 0;
+            skidCount = 0;
         }
     };
 

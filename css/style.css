@@ -136,9 +136,26 @@ body, html {
     letter-spacing: 0.05em;
     cursor: pointer;
     pointer-events: all;
+    appearance: none;
+    border: none;
+    background: none;
+    color: inherit;
+    font-family: inherit;
+    min-width: 44px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .contact-close:hover { opacity: 0.6; }
+
+.contact-close:focus-visible,
+.touch-btn:focus-visible,
+.link-group a:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
 
 .contact-content {
     text-align: center;
@@ -153,20 +170,6 @@ body, html {
     margin-bottom: 2rem;
     position: relative;
     display: inline-block;
-}
-
-.contact-badge {
-    position: absolute;
-    top: -10px; right: -20px;
-    width: 40px; height: 40px;
-    border-radius: 50%;
-    border: 1px solid var(--text);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background: var(--bg);
-    transform: rotate(-10deg);
-    overflow: hidden;
 }
 
 .contact-body {
@@ -302,7 +305,7 @@ body, html {
     letter-spacing: 0.2em;
     text-transform: uppercase;
     color: var(--text);
-    opacity: 0.35;
+    opacity: 0.55;
 }
 
 /* Tap phone animation (Android) */
@@ -317,7 +320,7 @@ body, html {
 
 .tap-phone-ripple {
     position: absolute;
-    inset: 0;
+    top: 0; right: 0; bottom: 0; left: 0;
     border-radius: 50%;
     border: 1px solid var(--accent);
     opacity: 0;
@@ -490,8 +493,8 @@ body, html {
 .touch-right { right: 2rem; flex-direction: column; gap: 0.5rem; }
 
 @keyframes btn-pulse {
-    0%, 100% { border-color: rgba(18, 18, 18, 0.15); }
-    50% { border-color: rgba(18, 18, 18, 0.35); }
+    0%, 100% { box-shadow: inset 0 0 0 1px rgba(18, 18, 18, 0.15); }
+    50% { box-shadow: inset 0 0 0 1px rgba(18, 18, 18, 0.35); }
 }
 
 .touch-btn {
@@ -499,8 +502,10 @@ body, html {
     display: flex;
     align-items: center;
     justify-content: center;
+    appearance: none;
     border: 1px solid rgba(18, 18, 18, 0.15);
     background: rgba(18, 18, 18, 0.04);
+    padding: 0;
     color: var(--text);
     font-family: var(--font-main);
     font-size: 0.6rem;
@@ -541,44 +546,18 @@ body, html {
     display: none;
 }
 
-/* Touch device landscape — JS toggles .touch-controls display via is-touch class,
-   but this media query handles the rest of the mobile landscape UI */
-@media (max-width: 900px) and (orientation: landscape) {
-    .is-touch .touch-controls { display: block; }
-    .controls-hint { display: none; }
-    .controls-hint-mobile { display: block; font-size: 0.55rem; opacity: 0.7; }
-    .logo { height: 100px; }
-    .ui-layer { padding: 0.2rem 1.5rem 0.8rem; }
-    .status-footer { font-size: 0.7rem; padding-top: 0.6rem; }
-    .status-text { font-size: 0.65rem; }
-    .speed-indicator { font-size: 0.7rem; }
-
-    /* Contact overlay mobile fit */
-    .contact-reveal { position: fixed; top: 0; left: 0; transform: scale(0.95); }
-    .contact-reveal.active { transform: scale(1); }
-    .contact-close { top: 1.5rem; right: 1.8rem; font-size: 0.65rem; z-index: 5; }
-    .contact-content { width: 90%; }
-    .contact-title { font-size: clamp(2rem, 6vw, 3.5rem); margin-bottom: 0.8rem; }
-    .contact-body { font-size: 0.8rem; margin-bottom: 1.5rem; line-height: 1.4; }
-    .contact-links { flex-direction: row; gap: 1rem; padding-top: 1rem; }
-    .link-group h4 { font-size: 0.6rem; margin-bottom: 0.3rem; }
-    .link-group a { font-size: 0.75rem; }
-}
-
-/* Wider phones (> 900px CSS width) still need touch UI in landscape */
-@media (max-width: 900px) {
-    .is-touch .controls-hint { display: none; }
-    .is-touch .controls-hint-mobile { display: block; }
-}
-
+/* Touch devices in landscape — unified rules for all screen widths */
 @media (orientation: landscape) {
+    .is-touch .touch-controls { display: block; }
+    .is-touch .controls-hint { display: none; }
+    .is-touch .controls-hint-mobile { display: block; font-size: 0.55rem; opacity: 0.7; }
     .is-touch .logo { height: 100px; }
     .is-touch .ui-layer { padding: 0.2rem 1.5rem 0.8rem; }
     .is-touch .status-footer { font-size: 0.7rem; padding-top: 0.6rem; }
     .is-touch .status-text { font-size: 0.65rem; }
     .is-touch .speed-indicator { font-size: 0.7rem; }
-    .is-touch .controls-hint-mobile { font-size: 0.55rem; opacity: 0.7; }
 
+    /* Contact overlay compact fit */
     .is-touch .contact-reveal { position: fixed; top: 0; left: 0; transform: scale(0.95); }
     .is-touch .contact-reveal.active { transform: scale(1); }
     .is-touch .contact-close { top: 1.5rem; right: 1.8rem; font-size: 0.65rem; z-index: 5; }
