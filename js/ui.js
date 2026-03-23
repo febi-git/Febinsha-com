@@ -22,7 +22,7 @@
     /* ── Device detection ── */
     const hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
     const isCoarsePointer = window.matchMedia('(pointer: coarse)').matches;
-    const isTouchDevice = hasTouch && isCoarsePointer;
+    const isTouchDevice = hasTouch && (isCoarsePointer || window.innerWidth <= 900);
     const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent) ||
                   (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 

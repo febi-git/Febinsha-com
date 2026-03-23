@@ -69,7 +69,7 @@ const SITE_CONFIG = {
         portraitHeading: "febinsha.com",
         portraitSubheading: "Site Under Construction",
         lockTextDefault: "Tap to drift",
-        lockTextIOS: "Tilt to drift",
+        lockTextIOS: "Rotate to drift",
         lockTextNoFullscreen: "Rotate to landscape to drift",
         controlsHintMobile: "Use on-screen buttons to drift",
     },
