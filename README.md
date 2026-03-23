@@ -31,12 +31,14 @@ Instead of a generic coming-soon page, visitors get an always-on canvas-based dr
 ├── front-end.md            # Design quality guidelines (reference)
 ├── Brand-Assets/
 │   ├── logo.png            # "Feb." bold logo (orange-red on transparent)
-│   ├── favicon.png         # Browser tab icon
+│   ├── favicon.png         # Browser tab icon (PNG)
+│   ├── favicon.ico         # ICO format for broad compatibility
 │   ├── Logo white.svg      # White logo used on the in-game contact node
 │   ├── Logo white fill.svg # White filled SVG favicon variant
 │   └── og-image.png        # Open Graph social share image
 ├── Variant/                # Design reference file
 ├── Mood-board/             # Visual inspiration references
+├── favicon.ico             # Root-level duplicate for Google Search favicon discovery
 └── CNAME                   # GitHub Pages custom domain → febinsha.com
 ```
 
@@ -55,7 +57,7 @@ Instead of a generic coming-soon page, visitors get an always-on canvas-based dr
 - **Always-on** — no start screen, no game over, no idle state. The car is always ready to drive.
 - **Controls**: WASD + Arrow keys (desktop), on-screen touch buttons (mobile), Space / HB button for handbrake
 - **Drift physics**: acceleration, friction, drift blending with slip detection, skid marks and tire trails
-- **Traffic cones**: procedurally spawned around the car, hitting one triggers a 1-second crash freeze with dark flash + car blink, then respawn
+- **Traffic cones**: procedurally spawned around the car (9 on mobile, 11 on desktop), hitting one triggers a 1-second crash freeze with dark flash + car blink, then respawn
 - **Contact node**: orange pulsing circle at world position (700, -400) with the logo inside — driving into it opens the contact overlay
 - **World wrapping**: environment text, lines, and contact node wrap around a 4000px tile so the world feels infinite
 - **Fixed timestep physics** at 16.667ms intervals for consistent behavior across frame rates
@@ -64,8 +66,8 @@ Instead of a generic coming-soon page, visitors get an always-on canvas-based dr
 
 - **Portrait lock screen**: on mobile portrait, a fullscreen overlay prompts the user to rotate/tap/tilt
   - Android: tap animation with ripple → requests fullscreen + landscape lock
-  - iOS: tilt animation (no fullscreen API) → user manually rotates
-  - In-app browsers (Instagram, etc.): detects missing fullscreen API, shows "Rotate to landscape" message
+  - iOS: "Rotate to drift" tilt animation (no fullscreen API) → user manually rotates
+  - In-app browsers (Instagram, Facebook, Twitter, LinkedIn, Snapchat, TikTok, Pinterest): detected via UA string, adds `in-app-browser` class — shows tilt hint instead of tap, disables tap-to-fullscreen since the API is unavailable
 - **Touch controls**: left/right steer buttons + gas/brake/handbrake, visible only in landscape on touch devices
 - **Reduced physics**: lower acceleration, max speed, and cone count on mobile for performance
 
@@ -99,7 +101,7 @@ Built and iterated over March 21–23, 2026:
 | **Day 2 morning** (Mar 22) | Production-ready — favicon, CNAME setup, hello section, mobile perfection pass |
 | **Day 2 afternoon** | iPhone/Android specific fixes, button tuning, text sizing, iOS lock screen |
 | **Day 2 evening** | Final polish — Google Analytics, Instagram link fix, code audit, cone density tuning for mobile |
-| **Day 3** (Mar 23) | Refresh rate fix, in-app browser detection (Instagram/social media webviews), split into multi-file architecture (config/ui/game/css) |
+| **Day 3** (Mar 23) | Refresh rate fix, split into multi-file architecture (config/ui/game/css), in-app browser detection with UA-based class toggling (Instagram/Facebook/Twitter/LinkedIn/Snapchat/TikTok/Pinterest), mobile cone count tuned to 9, iOS lock text changed to "Rotate to drift", contact close button padding simplified, favicon.ico added at root + Brand-Assets for Google Search discovery, apple-touch-icon added |
 
 ## Architecture Decisions
 
@@ -108,4 +110,4 @@ Built and iterated over March 21–23, 2026:
 3. **No game states** — removed idle/gameover/score in favor of pure always-on interactivity
 4. **Swept-circle collision** — prevents car from tunneling through cones at high speed
 5. **Fixed timestep** — physics runs at consistent 16.667ms steps regardless of display refresh rate (fixes 120Hz+ screens)
-6. **In-app browser fallback** — detects when fullscreen API is unavailable (Instagram, Facebook, etc.) and adjusts the portrait lock messaging accordingly
+6. **In-app browser fallback** — detects in-app browsers via User-Agent regex (Instagram, Facebook, Twitter, LinkedIn, Snapchat, TikTok, Pinterest) and adds an `in-app-browser` body class. CSS uses this class to show the tilt hint and hide the tap animation, since fullscreen API is unavailable in these webviews. Touch device detection also widened to include screens ≤ 900px even without coarse pointer media query match
