@@ -451,11 +451,13 @@ body, html {
 
 /* In-app browsers (Instagram, etc.) — show tilt hint instead of tap for Android too
    since fullscreen/auto-rotate isn't available */
-.no-fullscreen .tilt-hint {
+.no-fullscreen .tilt-hint,
+.in-app-browser .tilt-hint {
     display: flex;
 }
 
-.no-fullscreen .tap-phone-wrap {
+.no-fullscreen .tap-phone-wrap,
+.in-app-browser .tap-phone-wrap {
     display: none;
 }
 

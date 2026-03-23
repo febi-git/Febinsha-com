@@ -26,11 +26,17 @@
     const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent) ||
                   (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
+    const isInAppBrowser = /Instagram|FBAN|FBAV|Twitter|LinkedInApp|Snapchat|BytedanceWebview|Pinterest/i
+                           .test(navigator.userAgent);
+
     if (isIOS) {
         document.body.classList.add('is-ios');
     }
     if (isTouchDevice) {
         document.body.classList.add('is-touch');
+    }
+    if (isInAppBrowser) {
+        document.body.classList.add('in-app-browser');
     }
 
     /* Detect if fullscreen API is available (not in Instagram/in-app browsers) */
@@ -45,10 +51,9 @@
     document.getElementById('contactTitle').textContent = cfg.contact.title;
     document.getElementById('contactBody').innerHTML = cfg.contact.body;
     var lockTextEl = document.getElementById('lockText');
-    if (isIOS) {
+    if (isIOS || isInAppBrowser) {
         lockTextEl.textContent = cfg.ui.lockTextIOS;
     } else if (!canFullscreen) {
-        /* In-app browsers (Instagram, etc.) can't do fullscreen — tell user to rotate */
         lockTextEl.textContent = cfg.ui.lockTextNoFullscreen || 'Rotate to landscape to drift';
     } else {
         lockTextEl.textContent = cfg.ui.lockTextDefault;
@@ -102,7 +107,7 @@
             requestFullAndLandscape();
         }
     }
-    if (!isIOS) {
+    if (!isIOS && !isInAppBrowser) {
         portraitLock.addEventListener('click', onFirstTouch);
     }
     canvas.addEventListener('touchstart', onFirstTouch, { once: true, passive: true });
