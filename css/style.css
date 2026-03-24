@@ -549,7 +549,7 @@ body, html {
     .is-touch .touch-controls { display: block; }
     .is-touch .controls-hint { display: none; }
     .is-touch .controls-hint-mobile { display: block; font-size: 0.55rem; opacity: 0.7; }
-    .is-touch .logo { height: 100px; }
+    .is-touch .logo { height: 140px; }
     .is-touch .ui-layer { padding: 0.2rem 1.5rem 0.8rem; }
     .is-touch .status-footer { font-size: 0.7rem; padding-top: 0.6rem; }
     .is-touch .status-text { font-size: 0.65rem; }
