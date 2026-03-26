@@ -4,16 +4,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Design Work — Required Reading
 
-Before executing any design or UI work, **always** read all SKILL.md files in `taste-skill-main/taste-skill-main/skills/`:
-- `taste-skill/SKILL.md`
-- `brutalist-skill/SKILL.md`
-- `minimalist-skill/SKILL.md`
-- `soft-skill/SKILL.md`
-- `stitch-skill/SKILL.md` (and `DESIGN.md`)
-- `output-skill/SKILL.md`
-- `redesign-skill/SKILL.md`
+Before executing any design or UI work, **always** read these files in `taste-skills/skills/`:
+- `taste-skills/skills/front-end.md` — frontend design philosophy
+- `taste-skills/skills/taste-skill/SKILL.md`
+- `taste-skills/skills/brutalist-skill/SKILL.md`
+- `taste-skills/skills/minimalist-skill/SKILL.md`
+- `taste-skills/skills/soft-skill/SKILL.md`
+- `taste-skills/skills/stitch-skill/SKILL.md` (and `DESIGN.md`)
+- `taste-skills/skills/output-skill/SKILL.md`
+- `taste-skills/skills/redesign-skill/SKILL.md`
 
-Also read `front-end.md` at the project root. Apply the principles from these files to all design decisions.
 
 ## What This Is
 
@@ -75,7 +75,7 @@ Triggered by driving into the orange node at world position (700, -400) or close
 
 ## File Conventions
 
-- `front-end.md` — design philosophy reference, consult before any UI work
+- `taste-skills/skills/front-end.md` — design philosophy reference, consult before any UI work
+- `taste-skills/` — design skill files, required reading before design work
 - `Brand-Assets/` — logos, favicons, OG image; `favicon.ico` duplicated at root for Google Search discovery
 - `Variant/` and `Mood-board/` — design references, not production code
-- `taste-skill-main/` — design skill files, required reading before design work

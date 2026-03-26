@@ -44,7 +44,7 @@ const SITE_CONFIG = {
             {
                 label: "Direct",
                 items: [
-                    { text: "hello@febinsha.com", href: "mailto:febinshapa123@gmail.com" },
+                    { text: "hello@febinsha.com", href: "mailto:hello@febinsha.com" },
                 ],
             },
             {
