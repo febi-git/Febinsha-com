@@ -22,7 +22,7 @@
     /* ── Device detection ── */
     const hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
     const isCoarsePointer = window.matchMedia('(pointer: coarse)').matches;
-    const isTouchDevice = hasTouch && (isCoarsePointer || window.innerWidth <= 900);
+    const isTouchDevice = hasTouch && isCoarsePointer && window.matchMedia('(hover: none)').matches;
     const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent) ||
                   (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
@@ -34,6 +34,19 @@
     }
     if (isTouchDevice) {
         document.body.classList.add('is-touch');
+    }
+
+    /* ── Hybrid device input switching (e.g. touchscreen laptop on external monitor) ──
+     * Static detection can't tell if the user is currently on their touchscreen or
+     * an external monitor with a mouse. Switch is-touch based on actual input type.  */
+    if (hasTouch) {
+        window.addEventListener('pointerdown', function (e) {
+            if (e.pointerType === 'mouse') {
+                document.body.classList.remove('is-touch');
+            } else if (e.pointerType === 'touch') {
+                document.body.classList.add('is-touch');
+            }
+        }, { passive: true });
     }
     if (isInAppBrowser) {
         document.body.classList.add('in-app-browser');
